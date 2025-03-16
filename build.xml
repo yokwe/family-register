@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- ====================================================================== -->
+<!-- Ant build file (http://ant.apache.org/) for Ant 1.6.2 or above.        -->
+<!-- ====================================================================== -->
+
+<project name="family-register" default="package" basedir=".">
+	<import file="maven-build.xml" />
+
+	<!--
+	no need to specify this property because logback.xml is in classpass
+ 	<property name="logback.conf" value="data/logback.xml" />
+ 	-->
+
+	<path id="target.jar">
+		<pathelement location="${maven.build.dir}/${maven.build.finalName}.jar" />
+	</path>
+	
+	<target name="run-antlr">
+		<property name="grammer-file"   value="src/main/java/yokwe/family/register/FamilyRegister.g4" />
+		<property name="output-dir"     value="src/main/java/yokwe/family/register/visitor" />
+		<property name="output-package" value="yokwe.family.register.visitor" />
+		
+		<delete>
+			<fileset dir="${output-dir}">
+				<include name="*"/>
+			</fileset>
+		</delete>
+		
+		<java classname="org.antlr.v4.Tool" fork="true">
+			<classpath refid="build.classpath" />
+			<arg line="${grammer-file} -visitor -no-listener -package ${output-package} -Xexact-output-dir -o ${output-dir}" />
+		</java>
+	</target>
+	
+	<target name="run-T001">
+		<java module="yokwe.family_regiser/yokwe.family.register.T001" fork="true">
+			<modulepath refid="build.classpath" />
+			<modulepath refid="target.jar" />
+		</java>
+	</target>
+</project>

@@ -1,0 +1,6 @@
+/bin/
+/target/
+/tmp/
+/src/main/java/yokwe/family/register/visitor/
+/maven-build.properties
+/maven-build.xml
