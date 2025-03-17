@@ -2,6 +2,7 @@ package yokwe.family.register;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.tree.ErrorNode;
 
 import yokwe.family.register.visitor.FamilyRegisterBaseVisitor;
 import yokwe.family.register.visitor.FamilyRegisterLexer;
@@ -58,6 +59,11 @@ public class FileVisitor {
 		 public Object visitBirthValue(FamilyRegisterParser.BirthValueContext ctx) {
 				logger.info("birth  {}", ctx.value.getText());
 				return visitChildren(ctx);
+		 }
+		 
+		 public Object visitErrorNode(ErrorNode node) {
+			logger.info("error node  {}", node.getText());
+			return null;
 		 }
 	}
 	
