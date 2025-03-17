@@ -12,12 +12,35 @@ fragment
 JAPANESE_DAY:		([1-9])|([12][0-9])|('3'[01]);
 JAPANESE_DATE:		JAPANESE_ERA JAPANESE_YEAR '年' JAPANESE_MONTH '月' JAPANESE_DAY '日';
 
-JAPANESE_GENDER:	'男'|'女';
+JAPANESE_GENDER:	[MF];
+
+BLOCK_BEGIN:		'{';
+BLOCK_END:			'}';
+
+FAMILY:				'family';
+MARRIAGE:			'marriage';
+PERSON:				'person';
+
+ADDRESS:			'address';
+FAMILY_NAME:		'family-name';
+FATHER:				'father';
+MOTHER:				'mother';
+RELATION:			'relation';
+NAME:				'name';
+GENDER:				'gender';
+BIRTH:				'birth';
+DEATH:				'death';
+DATE:				'date';
+HUSBAND:			'husband';
+WIFE:				'wife';
+CHILD:				'child';
+
 SPACE:				[ \t\r\n]+ -> skip;
 
 
+
 body
-	: 'family' '{' blockList '}'
+	: FAMILY BLOCK_BEGIN blockList BLOCK_END
 	;
 
 blockList
@@ -30,7 +53,7 @@ block
 	;
 
 marriageBlock
-	: 'marriage' '{' (marriageValue|childBlock)+ '}'
+	: MARRIAGE BLOCK_BEGIN (marriageValue|childBlock)+ BLOCK_END
 	;
 marriageValue
 	: addressValue
@@ -41,7 +64,7 @@ marriageValue
 	;
 
 personBlock
-	:  'person' '{' personValue+ '}'
+	:  PERSON BLOCK_BEGIN personValue+ BLOCK_END
 	;
 personValue
 	: addressValue
@@ -56,7 +79,7 @@ personValue
 	;
 
 childBlock
-	: 'child' '{' childValue+ '}'
+	: CHILD BLOCK_BEGIN childValue+ BLOCK_END
 	;
 childValue
 	: nameValue
@@ -66,38 +89,38 @@ childValue
 	;
 
 addressValue
-	: 'address' value=JAPANESE_STRING
+	: ADDRESS value=JAPANESE_STRING
 	;
 familyNameValue
-	: 'family-name' value=JAPANESE_STRING
+	: FAMILY_NAME value=JAPANESE_STRING
 	;
 fatherValue
-	: 'father' value=JAPANESE_STRING
+	: FATHER value=JAPANESE_STRING
 	;
 motherValue
-	: 'mother' value=JAPANESE_STRING
+	: MOTHER value=JAPANESE_STRING
 	;
 dateValue
-	: 'date' value=JAPANESE_DATE
+	: DATE value=JAPANESE_DATE
 	;
 relationValue
-	: 'relation' value=JAPANESE_STRING
+	: RELATION value=JAPANESE_STRING
 	;
 nameValue
-	: 'name' value=JAPANESE_STRING
+	: NAME value=JAPANESE_STRING
 	;
 genderValue
-	: 'gender' value=JAPANESE_GENDER
+	: GENDER value=JAPANESE_GENDER
 	;
 birthValue
-	: 'birth' value=JAPANESE_DATE
+	: BIRTH value=JAPANESE_DATE
 	;
 deathValue
-	: 'death' value=JAPANESE_DATE
+	: DEATH value=JAPANESE_DATE
 	;
 husbandValue
-	: 'husband' value=JAPANESE_STRING
+	: HUSBAND value=JAPANESE_STRING
 	;
 wifeValue
-	: 'wife' value=JAPANESE_STRING
+	: WIFE value=JAPANESE_STRING
 	;
