@@ -60,6 +60,10 @@ public class FileVisitor {
 				logger.info("birth  {}", ctx.value.getText());
 				return visitChildren(ctx);
 		 }
+		 public Object visitGenderValue(FamilyRegisterParser.GenderValueContext ctx) {
+			 	logger.info("birth {}", ctx.value == null ? "null" : ctx.value.getText());
+				return visitChildren(ctx);
+		 }
 		 
 		 public Object visitErrorNode(ErrorNode node) {
 			logger.info("error node  {}", node.getText());
