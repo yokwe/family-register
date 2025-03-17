@@ -33,8 +33,8 @@
 		</java>
 	</target>
 	
-	<target name="run-T001">
-		<java module="yokwe.family_regiser/yokwe.family.register.T001" fork="true">
+	<target name="run-FileVisitor">
+		<java module="yokwe.family_regiser/yokwe.family.register.FileVisitor" fork="true">
 			<modulepath refid="build.classpath" />
 			<modulepath refid="target.jar" />
 		</java>
