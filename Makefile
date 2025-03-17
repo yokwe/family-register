@@ -2,18 +2,23 @@
 #
 #
 
+ANTLR_FILE := src/main/java/yokwe/family/register/FamilyRegister.g4
+TOKEN_FILE := src/main/java/yokwe/family/register/visitor/FamilyRegister.tokens
+
 
 main:
+	@echo "ANTLR_FILE  ${ANTLR_FILE}"
+	@echo "TOKEN_FILE  ${TOKEN_FILE}"
 	#echo main
 
-build: src/main/java/yokwe/family/register/visitor/FamilyRegisterVisitor.java
+build: ${TOKEN_FILE}
 	mvn ant:ant install
 
 full-build:
 	ant run-antlr
 	mvn clean ant:ant install
 
-src/main/java/yokwe/family/register/visitor/FamilyRegisterVisitor.java: src/main/java/yokwe/family/register/FamilyRegister.g4
+${TOKEN_FILE}: ${ANTLR_FILE}
 	ant run-antlr
 
 run-T001:
