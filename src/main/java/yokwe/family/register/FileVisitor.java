@@ -61,7 +61,7 @@ public class FileVisitor {
 				return visitChildren(ctx);
 		 }
 		 public Object visitGenderValue(FamilyRegisterParser.GenderValueContext ctx) {
-			 	logger.info("birth {}", ctx.value == null ? "null" : ctx.value.getText());
+			 	logger.info("gender {}", ctx.value == null ? "null" : ctx.value.getText());
 				return visitChildren(ctx);
 		 }
 		 
@@ -75,12 +75,28 @@ public class FileVisitor {
 		var string = FileUtil.read().file("data/family-register.txt");
 		var charStream = CharStreams.fromString(string);
 		
-		var lexter = new FamilyRegisterLexer(charStream);
-		var parser = new FamilyRegisterParser(new CommonTokenStream(lexter));
+		var lexer = new FamilyRegisterLexer(charStream);
 		
-		var tree = parser.body();
+		{
+			lexer.reset();
+			var parser = new FamilyRegisterParser(new CommonTokenStream(lexer));
+			var tree = parser.body();
+			logger.info("==== visitor ====");
+			var visitor = new MyVisitor();
+			visitor.visitBody(tree);
+			logger.info("==== ======= ====");
+		}
 		
-		var visitor = new MyVisitor();
-		visitor.visitBody(tree);
+		{
+			lexer.reset();
+			CommonTokenStream tokens = new CommonTokenStream(lexer);
+			tokens.fill();
+			logger.info("==== dump token ====");
+			for (var token : tokens.getTokens()) {
+				logger.info("token  {}  {}  {}  {}", token.getLine(), token.getCharPositionInLine(), token.getType(), token.getText());
+			}
+			logger.info("==== ==== ===== ====");
+		}
+		
 	}
 }
