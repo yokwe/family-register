@@ -1,40 +1,40 @@
 grammar FamilyRegister;
 
-JAPANESE_STRING:	[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]+;
-
-fragment
-JAPANESE_ERA:		[\p{Script=Han}][\p{Script=Han}];
-fragment
-JAPANESE_YEAR:		('元'|[1-9])|([1-9][0-9]);
-fragment
-JAPANESE_MONTH:		([1-9])|('1'[012]);
-fragment
-JAPANESE_DAY:		([1-9])|([12][0-9])|('3'[01]);
-JAPANESE_DATE:		JAPANESE_ERA JAPANESE_YEAR '年' JAPANESE_MONTH '月' JAPANESE_DAY '日';
-
-JAPANESE_GENDER:	[MF];
-
+#
+# concrete lexer rule first
+#
 BLOCK_BEGIN:		'{';
 BLOCK_END:			'}';
 
-FAMILY:				'family';
-MARRIAGE:			'marriage';
-PERSON:				'person';
+FAMILY:				'家族';
+MARRIAGE:			'結婚';
+PERSON:				'人物';
 
-ADDRESS:			'address';
-FAMILY_NAME:		'family-name';
-FATHER:				'father';
-MOTHER:				'mother';
-RELATION:			'relation';
-NAME:				'name';
-GENDER:				'gender';
-BIRTH:				'birth';
-DEATH:				'death';
-DATE:				'date';
-HUSBAND:			'husband';
-WIFE:				'wife';
-CHILD:				'child';
+ADDRESS:			'本籍';
+FAMILY_NAME:		'姓';
+FATHER:				'父';
+MOTHER:				'母';
+RELATION:			'関係';
+NAME:				'名';
+GENDER:				'性別';
+BIRTH:				'出生';
+DEATH:				'死亡';
+DATE:				'日付';
+HUSBAND:			'夫';
+WIFE:				'妻';
+CHILD:				'子';
 
+JAPANESE_GENDER:	[男女];
+
+#
+# abstract lexer rule second
+#
+JAPANESE_STRING:	[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]+;
+JAPANESE_DATE:		[\p{Script=Han}0-9]+;
+
+# ignore comment
+COMMENT:			'#' ~( '\r' | '\n' )* -> skip;
+# ignore white space
 SPACE:				[ \t\r\n]+ -> skip;
 
 

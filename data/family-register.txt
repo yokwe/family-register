@@ -1,16 +1,21 @@
-family {
-	marriage {
-		family-name かか
-		date	昭和35年1月1日
+#
+# aaa
+#
+
+家族 { # aa
+	結婚 {
+		姓 かか
+		日付	昭和35年1月1日
 		
-		child {
-			name	好弥
-			birth	昭和35年1月1日
+		子 {
+			名	好弥
+			出生	昭和35年1月1日
 		}
 	}
 	
-	person {
-		address あああ
-		name いいい
+	人物 {
+		住所 あああ
+		名 いいい
+		性別 男
 	}
 }
