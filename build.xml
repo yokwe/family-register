@@ -18,8 +18,8 @@
 	
 	<target name="run-antlr">
 		<property name="grammer-file"   value="src/main/java/yokwe/family/register/FamilyRegister.g4" />
-		<property name="output-dir"     value="src/main/java/yokwe/family/register/visitor" />
-		<property name="output-package" value="yokwe.family.register.visitor" />
+		<property name="output-dir"     value="src/main/java/yokwe/family/register/antlr" />
+		<property name="output-package" value="yokwe.family.register.antlr" />
 		
 		<delete>
 			<fileset dir="${output-dir}">
