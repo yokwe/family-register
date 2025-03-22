@@ -4,10 +4,10 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ErrorNode;
 
-import yokwe.family.register.visitor.FamilyRegisterBaseVisitor;
-import yokwe.family.register.visitor.FamilyRegisterLexer;
-import yokwe.family.register.visitor.FamilyRegisterParser;
-import yokwe.family.register.visitor.FamilyRegisterVisitor;
+import yokwe.family.register.antlr.FamilyRegisterBaseVisitor;
+import yokwe.family.register.antlr.FamilyRegisterLexer;
+import yokwe.family.register.antlr.FamilyRegisterParser;
+import yokwe.family.register.antlr.FamilyRegisterVisitor;
 import yokwe.util.FileUtil;
 
 public class FileVisitor {
@@ -37,11 +37,6 @@ public class FileVisitor {
 			logger.info("marriage  {}", ctx.getText());
 			return visitChildren(ctx);
 		}
-		@Override
-		public Object visitChildBlock(FamilyRegisterParser.ChildBlockContext ctx) {
-			logger.info("child  {}", ctx.getText());
-			return visitChildren(ctx);
-		}
 		
 		@Override
 		public Object visitAddressValue(FamilyRegisterParser.AddressValueContext ctx) {
@@ -50,18 +45,6 @@ public class FileVisitor {
 		 }
 		 public Object visitNameValue(FamilyRegisterParser.NameValueContext ctx) {
 				logger.info("name  {}", ctx.value.getText());
-				return visitChildren(ctx);
-		 }
-		 public Object visitDateValue(FamilyRegisterParser.DateValueContext ctx) {
-				logger.info("date  {}", ctx.value.getText());
-				return visitChildren(ctx);
-		 }
-		 public Object visitBirthValue(FamilyRegisterParser.BirthValueContext ctx) {
-				logger.info("birth  {}", ctx.value.getText());
-				return visitChildren(ctx);
-		 }
-		 public Object visitGenderValue(FamilyRegisterParser.GenderValueContext ctx) {
-			 	logger.info("gender {}", ctx.value == null ? "null" : ctx.value.getText());
 				return visitChildren(ctx);
 		 }
 		 
