@@ -1,7 +1,9 @@
 package yokwe.family.register;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -9,6 +11,7 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import yokwe.family.register.antlr.FamilyRegisterBaseVisitor;
 import yokwe.family.register.antlr.FamilyRegisterLexer;
 import yokwe.family.register.antlr.FamilyRegisterParser;
+import yokwe.family.register.type.*;
 import yokwe.util.FileUtil;
 
 public class ReadFile {
@@ -26,6 +29,8 @@ public class ReadFile {
 		File[] files = new File("data/family-register").listFiles(o -> o.getName().endsWith(".txt"));
 		Arrays.sort(files);
 		
+		var context = new Context();
+		
 		for(var file: files) {
 			logger.info("file  {}", file.getPath());
 			
@@ -39,26 +44,31 @@ public class ReadFile {
 				lexer.reset();
 				var parser = new FamilyRegisterParser(new CommonTokenStream(lexer));
 				var tree = parser.body();
-				logger.info("==== visitor ====");
-				var visitor = new Visitor();
+				logger.info("==================");
+				var visitor = new BuildContext(context);
 				visitor.visitBody(tree);
-				logger.info("==== ======= ====");
+				logger.info("==================");
 			}
 		}
 	}
 	
 	public static class Context {
-		
+		public final Address        address      = new Address();
+		public final List<Person>   personList   = new ArrayList<>();
+		public final List<Marriage> marriageList = new ArrayList<>();
 	}
 	
-	public static class Visitor extends FamilyRegisterBaseVisitor<Context> {
-		Context context = new Context();
+	public static class BuildContext extends FamilyRegisterBaseVisitor<Void> {
+		public final Context context;
 		
+		public BuildContext(Context context) {
+			this.context = context;
+		}
 		//
 		// AddressBlock
 		//
 		@Override
-		public Context visitAddressBlock(FamilyRegisterParser.AddressBlockContext ctx) {
+		public Void visitAddressBlock(FamilyRegisterParser.AddressBlockContext ctx) {
 			var address = ctx.value.getText();
 			logger.info("address  {}", address);
 			for (var e: ctx.changeValue()) {
@@ -73,7 +83,7 @@ public class ReadFile {
 		// PersonBlock
 		//
 		@Override
-		public Context visitPersonBlock(FamilyRegisterParser.PersonBlockContext ctx) {
+		public Void visitPersonBlock(FamilyRegisterParser.PersonBlockContext ctx) {
 			// addressValue fatherValue relationValue familyNameValue nameValue
 			var address = ctx.addressValue().value.getText();
 			var father = ctx.fatherValue().value.getText();
@@ -85,61 +95,61 @@ public class ReadFile {
 			return visitChildren(ctx);
 		}
 		@Override
-		public Context visitPersonItemBirth(FamilyRegisterParser.PersonItemBirthContext ctx) {
+		public Void visitPersonItemBirth(FamilyRegisterParser.PersonItemBirthContext ctx) {
 			var date = ctx.date.getText();
 			logger.info("  {}  BIRTH", date);
 			return visitChildren(ctx);
 		}
 		@Override
-		public Context visitPersonItemDeath(FamilyRegisterParser.PersonItemDeathContext ctx) {
+		public Void visitPersonItemDeath(FamilyRegisterParser.PersonItemDeathContext ctx) {
 			var date = ctx.date.getText();
 			logger.info("  {}  DEATH", date);
 			return visitChildren(ctx);
 		}
 		@Override
-		public Context visitPersonItemMarriage(FamilyRegisterParser.PersonItemMarriageContext ctx) {
+		public Void visitPersonItemMarriage(FamilyRegisterParser.PersonItemMarriageContext ctx) {
 			var date   = ctx.date.getText();
 			var spouse = ctx.spouse.getText();
 			logger.info("  {}  MARRIAGE  {}", date, spouse);
 			return visitChildren(ctx);
 		}
 		@Override
-		public Context visitPersonItemJoin(FamilyRegisterParser.PersonItemJoinContext ctx) {
+		public Void visitPersonItemJoin(FamilyRegisterParser.PersonItemJoinContext ctx) {
 			var date    = ctx.date.getText();
 			var address = ctx.address.getText();
 			logger.info("  {}  JOIN  {}", date, address);
 			return visitChildren(ctx);
 		}
 		@Override
-		public Context visitPersonItemSeparate(FamilyRegisterParser.PersonItemSeparateContext ctx) {
+		public Void visitPersonItemSeparate(FamilyRegisterParser.PersonItemSeparateContext ctx) {
 			var date    = ctx.date.getText();
 			var address = ctx.address.getText();
 			logger.info("  {}  SEPARATE  {}", date, address);
 			return visitChildren(ctx);
 		}
 		@Override
-		public Context visitPersonItemBranch(FamilyRegisterParser.PersonItemBranchContext ctx) {
+		public Void visitPersonItemBranch(FamilyRegisterParser.PersonItemBranchContext ctx) {
 			var date    = ctx.date.getText();
 			var address = ctx.address.getText();
 			logger.info("  {}  BRANCH  {}", date, address);
 			return visitChildren(ctx);
 		}
 		@Override
-		public Context visitPersonItemRetirement(FamilyRegisterParser.PersonItemRetirementContext ctx) {
+		public Void visitPersonItemRetirement(FamilyRegisterParser.PersonItemRetirementContext ctx) {
 			var date    = ctx.date.getText();
 			var newHead = ctx.newHead.getText();
 			logger.info("  {}  RETIREMENT  {}", date, newHead);
 			return visitChildren(ctx);
 		}
 		@Override
-		public Context visitPersonItemHeadOfHouseBranch(
+		public Void visitPersonItemHeadOfHouseBranch(
 				FamilyRegisterParser.PersonItemHeadOfHouseBranchContext ctx) {
 			var date    = ctx.date.getText();
 			logger.info("  {}  HEAD_OF_HOUSE BRANCH", date);
 			return visitChildren(ctx);
 		}
 		@Override
-		public Context visitPersonItemHeadOfHouseDeath(
+		public Void visitPersonItemHeadOfHouseDeath(
 				FamilyRegisterParser.PersonItemHeadOfHouseDeathContext ctx) {
 			var date = ctx.date.getText();
 			var name = ctx.prevHead.getText();
@@ -147,7 +157,7 @@ public class ReadFile {
 			return visitChildren(ctx);
 		}
 		@Override
-		public Context visitPersonItemHeadOfHouseRetirement(
+		public Void visitPersonItemHeadOfHouseRetirement(
 				FamilyRegisterParser.PersonItemHeadOfHouseRetirementContext ctx) {
 			var date = ctx.date.getText();
 			var name = ctx.prevHead.getText();
@@ -155,13 +165,13 @@ public class ReadFile {
 			return visitChildren(ctx);
 		}
 		@Override
-		public Context visitPersonItemInheritance(FamilyRegisterParser.PersonItemInheritanceContext ctx) {
+		public Void visitPersonItemInheritance(FamilyRegisterParser.PersonItemInheritanceContext ctx) {
 			var date = ctx.date.getText();
 			logger.info("  {}  INHERIT", date);
 			return visitChildren(ctx);
 		}
 		@Override
-		public Context visitPersonItemDisinheritance(FamilyRegisterParser.PersonItemDisinheritanceContext ctx) {
+		public Void visitPersonItemDisinheritance(FamilyRegisterParser.PersonItemDisinheritanceContext ctx) {
 			var date = ctx.date.getText();
 			logger.info("  {}  DISINHERIT", date);
 			return visitChildren(ctx);
@@ -172,7 +182,7 @@ public class ReadFile {
 		// Marriage
 		//
 		@Override
-		public Context visitMarriageBlock(FamilyRegisterParser.MarriageBlockContext ctx) {
+		public Void visitMarriageBlock(FamilyRegisterParser.MarriageBlockContext ctx) {
 			// familyNameValue husbandValue wifeValue
 			var familyName = ctx.familyNameValue().value.getText();
 			var husband    = ctx.husbandValue().value.getText();
@@ -183,7 +193,7 @@ public class ReadFile {
 		}
 
 		@Override
-		public Context visitMarriageItemMarriage(FamilyRegisterParser.MarriageItemMarriageContext ctx) {
+		public Void visitMarriageItemMarriage(FamilyRegisterParser.MarriageItemMarriageContext ctx) {
 			var date = ctx.date.getText();
 			var type = ctx.type.getText();
 			logger.info("  {}  MARRIAGE  {}", date, type);
@@ -191,7 +201,7 @@ public class ReadFile {
 		}
 
 		@Override
-		public Context visitMarriageItemDivorce(FamilyRegisterParser.MarriageItemDivorceContext ctx) {
+		public Void visitMarriageItemDivorce(FamilyRegisterParser.MarriageItemDivorceContext ctx) {
 			var date = ctx.date.getText();
 			var type = ctx.type.getText();
 			logger.info("  {}  DIVORCE  {}", date, type);
@@ -199,7 +209,7 @@ public class ReadFile {
 		}
 
 		@Override
-		public Context visitMarriageItemRelation(FamilyRegisterParser.MarriageItemRelationContext ctx) {
+		public Void visitMarriageItemRelation(FamilyRegisterParser.MarriageItemRelationContext ctx) {
 			var date = ctx.date.getText();
 			var type = ctx.type.getText();
 			var name = ctx.name.getText();
