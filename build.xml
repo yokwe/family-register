@@ -33,8 +33,15 @@
 		</java>
 	</target>
 	
-	<target name="run-FileVisitor">
-		<java module="yokwe.family_regiser/yokwe.family.register.FileVisitor" fork="true">
+	<target name="run-DumpToken">
+		<java module="yokwe.family_regiser/yokwe.family.register.DumpToken" fork="true">
+			<modulepath refid="build.classpath" />
+			<modulepath refid="target.jar" />
+		</java>
+	</target>
+	
+	<target name="run-ReadFile">
+		<java module="yokwe.family_regiser/yokwe.family.register.ReadFile" fork="true">
 			<modulepath refid="build.classpath" />
 			<modulepath refid="target.jar" />
 		</java>
