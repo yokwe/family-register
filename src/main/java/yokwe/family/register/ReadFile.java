@@ -118,6 +118,14 @@ public class ReadFile {
 					var date   = JapaneseDate.getInstance(item.date.getText());
 					var spouse = item.spouse.getText();
 					list.add(Person.Item.marriageJoin(date, spouse));
+				} else if (e instanceof PersonItemDivorceContext) {
+					var item   = (PersonItemDivorceContext)e;
+					var date   = JapaneseDate.getInstance(item.date.getText());
+					list.add(Person.Item.divorce(date));
+				} else if (e instanceof PersonItemDivorceRejoinContext) {
+					var item   = (PersonItemDivorceRejoinContext)e;
+					var date   = JapaneseDate.getInstance(item.date.getText());
+					list.add(Person.Item.divorceRejoin(date));
 				} else if (e instanceof PersonItemBranchContext) {
 					var item = (PersonItemBranchContext)e;
 					var date = JapaneseDate.getInstance(item.date.getText());

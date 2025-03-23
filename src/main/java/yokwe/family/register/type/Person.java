@@ -12,6 +12,8 @@ public class Person implements Comparable<Person> {
 			DEATH("死亡"),
 			MARRIAGE("結婚"),
 			MARRIAGE_JOIN("結婚入籍"),
+			DIVORCE("離婚"),
+			DIVORCE_REJOIN("離婚復籍"),
 			BRANCH("分家"),
 			RETIREMENT("隠居"),
 			HEAD_OF_HOUSE_BRANCH("戸主_分家"),
@@ -54,6 +56,12 @@ public class Person implements Comparable<Person> {
 		}
 		public static Item marriageJoin(JapaneseDate date, String value) {
 			return new Item(date, Type.MARRIAGE_JOIN, value);
+		}
+		public static Item divorce(JapaneseDate date) {
+			return new Item(date, Type.DIVORCE);
+		}
+		public static Item divorceRejoin(JapaneseDate date) {
+			return new Item(date, Type.DIVORCE_REJOIN);
 		}
 		public static Item branch(JapaneseDate date, String value) {
 			return new Item(date, Type.BRANCH, value);

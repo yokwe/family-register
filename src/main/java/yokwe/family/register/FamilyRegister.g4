@@ -26,13 +26,13 @@ HEAD_OF_HOUSE:			'戸主';
 BRANCH:					'分家';
 MARRIAGE:				'結婚';
 MARRIAGE_JOIN:			'結婚入籍';
+DIVORCE:				'離婚';
+DIVORCE_REJOIN:			'離婚復籍';
 RETIREMENT:				'隠居';
 DEATH_OF_PREVIOUS:		'前戸主死亡';
 RETIREMENT_OF_PREVIOUS:	'前戸主隠居';
 INHERITANCE:			'嗣子';
 DISINHERITANCE:			'廃嫡';
-
-DIVORCE:				'離婚';
 
 HUSBAND:				'夫';
 WIFE:					'妻';
@@ -107,6 +107,8 @@ personItemValue
 	| date=JAPANESE_DATE DEATH															#  PersonItemDeath
 	| date=JAPANESE_DATE MARRIAGE spouse=JAPANESE_STRING								#  PersonItemMarriage
 	| date=JAPANESE_DATE MARRIAGE_JOIN spouse=JAPANESE_STRING							#  PersonItemMarriageJoin
+	| date=JAPANESE_DATE DIVORCE														#  PersonItemDivorce
+	| date=JAPANESE_DATE DIVORCE_REJOIN													#  PersonItemDivorceRejoin
 	| date=JAPANESE_DATE BRANCH address=JAPANESE_STRING									#  PersonItemBranch
 	| date=JAPANESE_DATE RETIREMENT newHead=JAPANESE_STRING								#  PersonItemRetirement
 	| date=JAPANESE_DATE HEAD_OF_HOUSE BRANCH											#  PersonItemHeadOfHouseBranch
