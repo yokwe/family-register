@@ -7,7 +7,7 @@ import yokwe.util.StringUtil;
 
 public class Person implements Comparable<Person> {
 	public static class Item {
-		enum Type {
+		public enum Type {
 			BIRTH("出生"),
 			DEATH("死亡"),
 			MARRIAGE("結婚"),
