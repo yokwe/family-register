@@ -64,7 +64,7 @@ SPACE:				[ \t\r\n]+ -> skip;
 
 
 body
-	: FAMILY_REGISTER BLOCK_BEGIN block+ BLOCK_END
+	: FAMILY_REGISTER BLOCK_BEGIN block* BLOCK_END
 	;
 
 block
