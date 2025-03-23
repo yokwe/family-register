@@ -58,7 +58,7 @@ public class ReadFile {
 	public static class Context {
 		public final List<List<String>> addressList  = new ArrayList<>();
 		public final List<Person>       personList   = new ArrayList<>();
-		public final List<Marriage>     marriageList = new ArrayList<>();
+		public final List<Family>       familyList = new ArrayList<>();
 	}
 	
 	public static class BuildContext extends FamilyRegisterBaseVisitor<Void> {
@@ -113,16 +113,11 @@ public class ReadFile {
 					var date   = JapaneseDate.getInstance(item.date.getText());
 					var spouse = item.spouse.getText();
 					list.add(Person.Item.marriage(date, spouse));
-				} else if (e instanceof PersonItemJoinContext) {
-					var item = (PersonItemJoinContext)e;
-					var date = JapaneseDate.getInstance(item.date.getText());
-					var addr = item.address.getText();
-					list.add(Person.Item.join(date, addr));
-				} else if (e instanceof PersonItemSeparateContext) {
-					var item = (PersonItemSeparateContext)e;
-					var date = JapaneseDate.getInstance(item.date.getText());
-					var addr = item.address.getText();
-					list.add(Person.Item.separate(date, addr));
+				} else if (e instanceof PersonItemMarriageJoinContext) {
+					var item   = (PersonItemMarriageJoinContext)e;
+					var date   = JapaneseDate.getInstance(item.date.getText());
+					var spouse = item.spouse.getText();
+					list.add(Person.Item.marriageJoin(date, spouse));
 				} else if (e instanceof PersonItemBranchContext) {
 					var item = (PersonItemBranchContext)e;
 					var date = JapaneseDate.getInstance(item.date.getText());
@@ -171,42 +166,27 @@ public class ReadFile {
 		
 		
 		//
-		// Marriage
+		// Family
 		//
 		@Override
-		public Void visitMarriageBlock(FamilyRegisterParser.MarriageBlockContext ctx) {
+		public Void visitFamilyBlock(FamilyRegisterParser.FamilyBlockContext ctx) {
 			// familyNameValue husbandValue wifeValue
 			var familyName = ctx.familyNameValue().value.getText();
 			var husband    = ctx.husbandValue().value.getText();
 			var wife       = ctx.wifeValue().value.getText();
 			
 			// build list
-			var list = new ArrayList<Marriage.Item>();
-			for(var e: ctx.marriageItemBlock().marriageItemValue()) {
-				if (e instanceof MarriageItemMarriageContext) {
-					var item = (MarriageItemMarriageContext)e;
-					var date = JapaneseDate.getInstance(item.date.getText());
-					list.add(Marriage.Item.marriage(date));
-				} else if (e instanceof MarriageItemDivorceContext) {
-					var item = (MarriageItemDivorceContext)e;
-					var date = JapaneseDate.getInstance(item.date.getText());
-					list.add(Marriage.Item.divorce(date));
-				} else if (e instanceof MarriageItemRelationContext) {
-					var item     = (MarriageItemRelationContext)e;
-					var date     = JapaneseDate.getInstance(item.date.getText());
-					var relation = Relation.fromString(item.type.getText());
-					var name     = item.name.getText();
-					list.add(Marriage.Item.relation(date, relation, name));
-				} else {
-					logger.error("Unexpected class");
-					logger.error("  class  {}", e.getClass().getName());
-					throw new UnexpectedException("Unexpected class");
-				}
+			var list = new ArrayList<Family.Item>();
+			for(var e: ctx.familyItemBlock().familyItemValue()) {
+				var date     = JapaneseDate.getInstance(e.date.getText());
+				var relation = Relation.fromString(e.type.getText());
+				var name     = e.name.getText();
+				list.add(Family.Item.relation(date, relation, name));
 			}
 			
-			var marriage = new Marriage(familyName, husband, wife, list);
-			logger.info("marriage  {}", marriage);
-			context.marriageList.add(marriage);
+			var family = new Family(familyName, husband, wife, list);
+			logger.info("family  {}", family);
+			context.familyList.add(family);
 
 			return visitChildren(ctx);
 		}

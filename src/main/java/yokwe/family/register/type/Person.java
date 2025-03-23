@@ -9,6 +9,7 @@ public class Person implements Comparable<Person> {
 	public static class Item {
 		enum Type {
 			BIRTH, DEATH, MARRIAGE,
+			MARRIAGE_JOIN, MARRIAGE_SEPARATE,
 			JOIN, SEPARATE,
 			BRANCH, RETIREMENT,
 			HEAD_OF_HOUSE_BRANCH,
@@ -38,6 +39,12 @@ public class Person implements Comparable<Person> {
 		}
 		public static Item marriage(JapaneseDate date, String value) {
 			return new Item(date, Type.MARRIAGE, value);
+		}
+		public static Item marriageJoin(JapaneseDate date, String value) {
+			return new Item(date, Type.MARRIAGE_JOIN, value);
+		}
+		public static Item marriageSeparate(JapaneseDate date, String value) {
+			return new Item(date, Type.MARRIAGE_SEPARATE, value);
 		}
 		public static Item join(JapaneseDate date, String value) {
 			return new Item(date, Type.JOIN, value);

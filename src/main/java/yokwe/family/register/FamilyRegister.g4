@@ -10,9 +10,8 @@ FAMILY_REGISTER:		'戸籍';
 
 ADDRESS:				'本籍';
 PERSON:					'人物';
-MARRIAGE:				'結婚';
+FAMILY:					'家族';
 
-CHANGE:					'変更';
 ITEM:					'事項';
 
 
@@ -23,15 +22,15 @@ NAME:					'名前';
 
 BIRTH:					'出生';
 DEATH:					'死亡';
-INHERITANCE:			'嗣子';
-DISINHERITANCE:			'廃嫡';
 HEAD_OF_HOUSE:			'戸主';
 BRANCH:					'分家';
-JOIN:					'入籍';
-SEPARATE:				'除籍';
+MARRIAGE:				'結婚';
+MARRIAGE_JOIN:			'結婚入籍';
 RETIREMENT:				'隠居';
 DEATH_OF_PREVIOUS:		'前戸主死亡';
 RETIREMENT_OF_PREVIOUS:	'前戸主隠居';
+INHERITANCE:			'嗣子';
+DISINHERITANCE:			'廃嫡';
 
 DIVORCE:				'離婚';
 
@@ -71,7 +70,7 @@ body
 block
 	: addressBlock
 	| personBlock
-	| marriageBlock
+	| familyBlock
 	;
 
 addressBlock
@@ -80,6 +79,7 @@ addressBlock
 addressBlockItem
 	: value=JAPANESE_STRING
 	;
+	
 	
 personBlock
 	: PERSON BLOCK_BEGIN addressValue fatherValue relationValue familyNameValue nameValue personItemBlock BLOCK_END
@@ -106,8 +106,7 @@ personItemValue
 	: date=JAPANESE_DATE BIRTH															#  PersonItemBirth
 	| date=JAPANESE_DATE DEATH															#  PersonItemDeath
 	| date=JAPANESE_DATE MARRIAGE spouse=JAPANESE_STRING								#  PersonItemMarriage
-	| date=JAPANESE_DATE JOIN address=JAPANESE_STRING									#  PersonItemJoin
-	| date=JAPANESE_DATE SEPARATE address=JAPANESE_STRING								#  PersonItemSeparate
+	| date=JAPANESE_DATE MARRIAGE_JOIN spouse=JAPANESE_STRING							#  PersonItemMarriageJoin
 	| date=JAPANESE_DATE BRANCH address=JAPANESE_STRING									#  PersonItemBranch
 	| date=JAPANESE_DATE RETIREMENT newHead=JAPANESE_STRING								#  PersonItemRetirement
 	| date=JAPANESE_DATE HEAD_OF_HOUSE BRANCH											#  PersonItemHeadOfHouseBranch
@@ -118,16 +117,14 @@ personItemValue
 	;
 
 
-marriageBlock
-	: MARRIAGE BLOCK_BEGIN familyNameValue husbandValue wifeValue marriageItemBlock BLOCK_END
+familyBlock
+	: FAMILY BLOCK_BEGIN familyNameValue husbandValue wifeValue familyItemBlock BLOCK_END
 	;
-marriageItemBlock
-	: ITEM BLOCK_BEGIN marriageItemValue+ BLOCK_END
+familyItemBlock
+	: ITEM BLOCK_BEGIN familyItemValue+ BLOCK_END
 	;
-marriageItemValue
-	: date=JAPANESE_DATE type=MARRIAGE									#  MarriageItemMarriage
-	| date=JAPANESE_DATE type=DIVORCE									#  MarriageItemDivorce
-	| date=JAPANESE_DATE type=JAPANESE_RELATION name=JAPANESE_STRING	#  MarriageItemRelation
+familyItemValue
+	: date=JAPANESE_DATE type=JAPANESE_RELATION name=JAPANESE_STRING
 	;
 husbandValue
 	: HUSBAND value=JAPANESE_STRING
