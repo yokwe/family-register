@@ -46,7 +46,7 @@ JAPANESE_GENDER:	[男女];
 // abstract lexer rule second
 //
 fragment
-JAPANESE_ERA:		'昭和'|'大正'|'明治'|'嘉永'|'天保'|'文化'|'文政';
+JAPANESE_ERA:		'昭和'|'大正'|'明治'|'慶応'|'元治'|'文久'|'万延'|'安政'|'嘉永'|'弘化'|'天保'|'文政'|'文化'|'享和';
 fragment
 JAPANESE_YEAR:		'元'|[1-9]|[1-9][0-9];
 fragment
@@ -75,10 +75,10 @@ block
 	;
 
 addressBlock
-	: ADDRESS value=JAPANESE_STRING BLOCK_BEGIN changeValue+ BLOCK_END
+	: ADDRESS BLOCK_BEGIN addressBlockItem+ BLOCK_END
 	;
-changeValue
-	: CHANGE value=JAPANESE_STRING
+addressBlockItem
+	: value=JAPANESE_STRING
 	;
 	
 personBlock
@@ -103,18 +103,18 @@ personItemBlock
 	: ITEM BLOCK_BEGIN personItemValue+ BLOCK_END
 	;
 personItemValue
-	: date=JAPANESE_DATE BIRTH																#  PersonItemBirth
-	| date=JAPANESE_DATE DEATH																#  PersonItemDeath
-	| date=JAPANESE_DATE MARRIAGE spouse=JAPANESE_STRING									#  PersonItemMarriage
-	| date=JAPANESE_DATE JOIN address=JAPANESE_STRING										#  PersonItemJoin
-	| date=JAPANESE_DATE SEPARATE address=JAPANESE_STRING									#  PersonItemSeparate
-	| date=JAPANESE_DATE BRANCH address=JAPANESE_STRING										#  PersonItemBranch
-	| date=JAPANESE_DATE RETIREMENT newHead=JAPANESE_STRING							#  PersonItemRetirement
-	| date=JAPANESE_DATE HEAD_OF_HOUSE BRANCH												#  PersonItemHeadOfHouseBranch
+	: date=JAPANESE_DATE BIRTH															#  PersonItemBirth
+	| date=JAPANESE_DATE DEATH															#  PersonItemDeath
+	| date=JAPANESE_DATE MARRIAGE spouse=JAPANESE_STRING								#  PersonItemMarriage
+	| date=JAPANESE_DATE JOIN address=JAPANESE_STRING									#  PersonItemJoin
+	| date=JAPANESE_DATE SEPARATE address=JAPANESE_STRING								#  PersonItemSeparate
+	| date=JAPANESE_DATE BRANCH address=JAPANESE_STRING									#  PersonItemBranch
+	| date=JAPANESE_DATE RETIREMENT newHead=JAPANESE_STRING								#  PersonItemRetirement
+	| date=JAPANESE_DATE HEAD_OF_HOUSE BRANCH											#  PersonItemHeadOfHouseBranch
 	| date=JAPANESE_DATE HEAD_OF_HOUSE DEATH_OF_PREVIOUS prevHead=JAPANESE_STRING		#  PersonItemHeadOfHouseDeath
 	| date=JAPANESE_DATE HEAD_OF_HOUSE RETIREMENT_OF_PREVIOUS prevHead=JAPANESE_STRING	#  PersonItemHeadOfHouseRetirement
-	| date=JAPANESE_DATE INHERITANCE														#  PersonItemInheritance
-	| date=JAPANESE_DATE DISINHERITANCE														#  PersonItemDisinheritance
+	| date=JAPANESE_DATE INHERITANCE													#  PersonItemInheritance
+	| date=JAPANESE_DATE DISINHERITANCE													#  PersonItemDisinheritance
 	;
 
 

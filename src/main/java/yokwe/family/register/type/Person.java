@@ -19,52 +19,52 @@ public class Person implements Comparable<Person> {
 		}
 		
 		public final JapaneseDate date;
-		public final Type   type;
-		public final String value;
+		public final Type         type;
+		public final String       value;
 		
-		private Item(String dateString, Type type, String value) {
-			this.date  = JapaneseDate.getInstance(dateString);
+		private Item(JapaneseDate date, Type type, String value) {
+			this.date  = date;
 			this.type  = type;
 			this.value = value;
 		}
-		private Item(String dateString, Type type) {
-			this(dateString, type, null);
+		private Item(JapaneseDate date, Type type) {
+			this(date, type, null);
 		}
-		public static Item birth(String dateString) {
-			return new Item(dateString, Type.BIRTH);
+		public static Item birth(JapaneseDate date) {
+			return new Item(date, Type.BIRTH);
 		}
-		public static Item death(String dateString) {
-			return new Item(dateString, Type.DEATH);
+		public static Item death(JapaneseDate date) {
+			return new Item(date, Type.DEATH);
 		}
-		public static Item marriage(String dateString, String value) {
-			return new Item(dateString, Type.MARRIAGE, value);
+		public static Item marriage(JapaneseDate date, String value) {
+			return new Item(date, Type.MARRIAGE, value);
 		}
-		public static Item join(String dateString, String value) {
-			return new Item(dateString, Type.JOIN, value);
+		public static Item join(JapaneseDate date, String value) {
+			return new Item(date, Type.JOIN, value);
 		}
-		public static Item separate(String dateString, String value) {
-			return new Item(dateString, Type.SEPARATE, value);
+		public static Item separate(JapaneseDate date, String value) {
+			return new Item(date, Type.SEPARATE, value);
 		}
-		public static Item branch(String dateString, String value) {
-			return new Item(dateString, Type.BRANCH, value);
+		public static Item branch(JapaneseDate date, String value) {
+			return new Item(date, Type.BRANCH, value);
 		}
-		public static Item retirement(String dateString, String value) {
-			return new Item(dateString, Type.RETIREMENT, value);
+		public static Item retirement(JapaneseDate date, String value) {
+			return new Item(date, Type.RETIREMENT, value);
 		}
-		public static Item headOfHouseBranch(String dateString) {
-			return new Item(dateString, Type.HEAD_OF_HOUSE_BRANCH);
+		public static Item headOfHouseBranch(JapaneseDate date) {
+			return new Item(date, Type.HEAD_OF_HOUSE_BRANCH);
 		}
-		public static Item headOfHouseDeath(String dateString, String value) {
-			return new Item(dateString, Type.HEAD_OF_HOUSE_DEATH, value);
+		public static Item headOfHouseDeath(JapaneseDate date, String value) {
+			return new Item(date, Type.HEAD_OF_HOUSE_DEATH, value);
 		}
-		public static Item headOfHouseRetirement(String dateString, String value) {
-			return new Item(dateString, Type.HEAD_OF_HOUSE_RETIREMENT, value);
+		public static Item headOfHouseRetirement(JapaneseDate date, String value) {
+			return new Item(date, Type.HEAD_OF_HOUSE_RETIREMENT, value);
 		}
-		public static Item inheritance(String dateString) {
-			return new Item(dateString, Type.INHERITANCE);
+		public static Item inheritance(JapaneseDate date) {
+			return new Item(date, Type.INHERITANCE);
 		}
-		public static Item disinheritance(String dateString) {
-			return new Item(dateString, Type.DISINHERITANCE);
+		public static Item disinheritance(JapaneseDate date) {
+			return new Item(date, Type.DISINHERITANCE);
 		}
 		
 		@Override
@@ -77,16 +77,15 @@ public class Person implements Comparable<Person> {
 		}
 	}
 	
-	
-	public final String address;
-	public final String father;
-	public final String relation;
-	public final String familyName;
-	public final String name;
+	public final String   address;
+	public final String   father;
+	public final Relation relation;
+	public final String   familyName;
+	public final String   name;
 	
 	public final List<Item> itemList;
 	
-	public Person(String address, String father, String relation, String familyName, String name, List<Item> itemList) {
+	public Person(String address, String father, Relation relation, String familyName, String name, List<Item> itemList) {
 		this.address    = address;
 		this.father     = father;
 		this.relation   = relation;
@@ -96,7 +95,11 @@ public class Person implements Comparable<Person> {
 	}
 	
 	public String getReference() {
-		return father + relation + name;
+		if (father.equals("不明")) {
+			return name;
+		} else {
+			return father + relation + name;
+		}
 	}
 	
 	@Override

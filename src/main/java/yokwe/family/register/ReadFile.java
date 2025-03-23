@@ -11,8 +11,11 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import yokwe.family.register.antlr.FamilyRegisterBaseVisitor;
 import yokwe.family.register.antlr.FamilyRegisterLexer;
 import yokwe.family.register.antlr.FamilyRegisterParser;
+import yokwe.family.register.antlr.FamilyRegisterParser.*;
 import yokwe.family.register.type.*;
 import yokwe.util.FileUtil;
+import yokwe.util.JapaneseDate;
+import yokwe.util.UnexpectedException;
 
 public class ReadFile {
 	private static final org.slf4j.Logger logger = yokwe.util.LoggerUtil.getLogger();
@@ -53,9 +56,9 @@ public class ReadFile {
 	}
 	
 	public static class Context {
-		public final Address        address      = new Address();
-		public final List<Person>   personList   = new ArrayList<>();
-		public final List<Marriage> marriageList = new ArrayList<>();
+		public final List<List<String>> addressList  = new ArrayList<>();
+		public final List<Person>       personList   = new ArrayList<>();
+		public final List<Marriage>     marriageList = new ArrayList<>();
 	}
 	
 	public static class BuildContext extends FamilyRegisterBaseVisitor<Void> {
@@ -69,12 +72,15 @@ public class ReadFile {
 		//
 		@Override
 		public Void visitAddressBlock(FamilyRegisterParser.AddressBlockContext ctx) {
-			var address = ctx.value.getText();
-			logger.info("address  {}", address);
-			for (var e: ctx.changeValue()) {
-				var alias = e.value.getText();
-				logger.info("  alias  {}", alias);
+			var addressList = new ArrayList<String>();
+			for(var e: ctx.addressBlockItem()) {
+				var value = e.value.getText();
+//				logger.info("  value  {}", value);
+				addressList.add(value);
 			}
+			logger.info("address  {}", addressList);
+			context.addressList.add(addressList);
+			
 			return visitChildren(ctx);
 		}
 		
@@ -85,95 +91,81 @@ public class ReadFile {
 		@Override
 		public Void visitPersonBlock(FamilyRegisterParser.PersonBlockContext ctx) {
 			// addressValue fatherValue relationValue familyNameValue nameValue
-			var address = ctx.addressValue().value.getText();
-			var father = ctx.fatherValue().value.getText();
-			var relation = ctx.relationValue().value.getText();
+			var address    = ctx.addressValue().value.getText();
+			var father     = ctx.fatherValue().value.getText();
+			var relation   = Relation.fromString(ctx.relationValue().value.getText());
 			var familyName = ctx.familyNameValue().value.getText();
-			var name = ctx.nameValue().value.getText();
+			var name       = ctx.nameValue().value.getText();
+						
+			// build list
+			var list = new ArrayList<Person.Item>();
+			for(var e: ctx.personItemBlock().personItemValue()) {
+				if (e instanceof PersonItemBirthContext) {
+					var item = (PersonItemBirthContext)e;
+					var date = JapaneseDate.getInstance(item.date.getText());
+					list.add(Person.Item.birth(date));
+				} else if (e instanceof PersonItemDeathContext) {
+					var item = (PersonItemDeathContext)e;
+					var date = JapaneseDate.getInstance(item.date.getText());
+					list.add(Person.Item.death(date));
+				} else if (e instanceof PersonItemMarriageContext) {
+					var item   = (PersonItemMarriageContext)e;
+					var date   = JapaneseDate.getInstance(item.date.getText());
+					var spouse = item.spouse.getText();
+					list.add(Person.Item.marriage(date, spouse));
+				} else if (e instanceof PersonItemJoinContext) {
+					var item = (PersonItemJoinContext)e;
+					var date = JapaneseDate.getInstance(item.date.getText());
+					var addr = item.address.getText();
+					list.add(Person.Item.join(date, addr));
+				} else if (e instanceof PersonItemSeparateContext) {
+					var item = (PersonItemSeparateContext)e;
+					var date = JapaneseDate.getInstance(item.date.getText());
+					var addr = item.address.getText();
+					list.add(Person.Item.separate(date, addr));
+				} else if (e instanceof PersonItemBranchContext) {
+					var item = (PersonItemBranchContext)e;
+					var date = JapaneseDate.getInstance(item.date.getText());
+					var addr = item.address.getText();
+					list.add(Person.Item.branch(date, addr));
+				} else if (e instanceof PersonItemRetirementContext) {
+					var item = (PersonItemRetirementContext)e;
+					var date = JapaneseDate.getInstance(item.date.getText());
+					var newHead = item.newHead.getText();
+					list.add(Person.Item.retirement(date, newHead));
+				} else if (e instanceof PersonItemHeadOfHouseBranchContext) {
+					var item = (PersonItemHeadOfHouseBranchContext)e;
+					var date = JapaneseDate.getInstance(item.date.getText());
+					list.add(Person.Item.headOfHouseBranch(date));
+				} else if (e instanceof PersonItemHeadOfHouseDeathContext) {
+					var item = (PersonItemHeadOfHouseDeathContext)e;
+					var date = JapaneseDate.getInstance(item.date.getText());
+					var prevHead = item.prevHead.getText();
+					list.add(Person.Item.headOfHouseDeath(date, prevHead));
+				} else if (e instanceof PersonItemHeadOfHouseRetirementContext) {
+					var item = (PersonItemHeadOfHouseRetirementContext)e;
+					var date = JapaneseDate.getInstance(item.date.getText());
+					var prevHead = item.prevHead.getText();
+					list.add(Person.Item.headOfHouseRetirement(date, prevHead));
+				} else if (e instanceof PersonItemInheritanceContext) {
+					var item = (PersonItemInheritanceContext)e;
+					var date = JapaneseDate.getInstance(item.date.getText());
+					list.add(Person.Item.inheritance(date));
+				} else if (e instanceof PersonItemDisinheritanceContext) {
+					var item = (PersonItemDisinheritanceContext)e;
+					var date = JapaneseDate.getInstance(item.date.getText());
+					list.add(Person.Item.disinheritance(date));
+				} else {
+					logger.error("Unexpected class");
+					logger.error("  class  {}", e.getClass().getName());
+					throw new UnexpectedException("Unexpected class");
+				}
+			}
 			
-			logger.info("person  {}  {}  {}  {}  {}", address, father, relation, familyName, name);
-			return visitChildren(ctx);
-		}
-		@Override
-		public Void visitPersonItemBirth(FamilyRegisterParser.PersonItemBirthContext ctx) {
-			var date = ctx.date.getText();
-			logger.info("  {}  BIRTH", date);
-			return visitChildren(ctx);
-		}
-		@Override
-		public Void visitPersonItemDeath(FamilyRegisterParser.PersonItemDeathContext ctx) {
-			var date = ctx.date.getText();
-			logger.info("  {}  DEATH", date);
-			return visitChildren(ctx);
-		}
-		@Override
-		public Void visitPersonItemMarriage(FamilyRegisterParser.PersonItemMarriageContext ctx) {
-			var date   = ctx.date.getText();
-			var spouse = ctx.spouse.getText();
-			logger.info("  {}  MARRIAGE  {}", date, spouse);
-			return visitChildren(ctx);
-		}
-		@Override
-		public Void visitPersonItemJoin(FamilyRegisterParser.PersonItemJoinContext ctx) {
-			var date    = ctx.date.getText();
-			var address = ctx.address.getText();
-			logger.info("  {}  JOIN  {}", date, address);
-			return visitChildren(ctx);
-		}
-		@Override
-		public Void visitPersonItemSeparate(FamilyRegisterParser.PersonItemSeparateContext ctx) {
-			var date    = ctx.date.getText();
-			var address = ctx.address.getText();
-			logger.info("  {}  SEPARATE  {}", date, address);
-			return visitChildren(ctx);
-		}
-		@Override
-		public Void visitPersonItemBranch(FamilyRegisterParser.PersonItemBranchContext ctx) {
-			var date    = ctx.date.getText();
-			var address = ctx.address.getText();
-			logger.info("  {}  BRANCH  {}", date, address);
-			return visitChildren(ctx);
-		}
-		@Override
-		public Void visitPersonItemRetirement(FamilyRegisterParser.PersonItemRetirementContext ctx) {
-			var date    = ctx.date.getText();
-			var newHead = ctx.newHead.getText();
-			logger.info("  {}  RETIREMENT  {}", date, newHead);
-			return visitChildren(ctx);
-		}
-		@Override
-		public Void visitPersonItemHeadOfHouseBranch(
-				FamilyRegisterParser.PersonItemHeadOfHouseBranchContext ctx) {
-			var date    = ctx.date.getText();
-			logger.info("  {}  HEAD_OF_HOUSE BRANCH", date);
-			return visitChildren(ctx);
-		}
-		@Override
-		public Void visitPersonItemHeadOfHouseDeath(
-				FamilyRegisterParser.PersonItemHeadOfHouseDeathContext ctx) {
-			var date = ctx.date.getText();
-			var name = ctx.prevHead.getText();
-			logger.info("  {}  HEAD_OF_HOUSE DEATH  {}", date, name);
-			return visitChildren(ctx);
-		}
-		@Override
-		public Void visitPersonItemHeadOfHouseRetirement(
-				FamilyRegisterParser.PersonItemHeadOfHouseRetirementContext ctx) {
-			var date = ctx.date.getText();
-			var name = ctx.prevHead.getText();
-			logger.info("  {}  HEAD_OF_HOUSE RETIREMENT  {}", date, name);
-			return visitChildren(ctx);
-		}
-		@Override
-		public Void visitPersonItemInheritance(FamilyRegisterParser.PersonItemInheritanceContext ctx) {
-			var date = ctx.date.getText();
-			logger.info("  {}  INHERIT", date);
-			return visitChildren(ctx);
-		}
-		@Override
-		public Void visitPersonItemDisinheritance(FamilyRegisterParser.PersonItemDisinheritanceContext ctx) {
-			var date = ctx.date.getText();
-			logger.info("  {}  DISINHERIT", date);
+			var person = new Person(address, father, relation, familyName, name, list);
+			logger.info("person  {}", person);
+			context.personList.add(person);
+			
 			return visitChildren(ctx);
 		}
 		
@@ -188,32 +180,34 @@ public class ReadFile {
 			var husband    = ctx.husbandValue().value.getText();
 			var wife       = ctx.wifeValue().value.getText();
 			
-			logger.info("marriage  {}  {}  {}", familyName, husband, wife);
-			return visitChildren(ctx);
-		}
+			// build list
+			var list = new ArrayList<Marriage.Item>();
+			for(var e: ctx.marriageItemBlock().marriageItemValue()) {
+				if (e instanceof MarriageItemMarriageContext) {
+					var item = (MarriageItemMarriageContext)e;
+					var date = JapaneseDate.getInstance(item.date.getText());
+					list.add(Marriage.Item.marriage(date));
+				} else if (e instanceof MarriageItemDivorceContext) {
+					var item = (MarriageItemDivorceContext)e;
+					var date = JapaneseDate.getInstance(item.date.getText());
+					list.add(Marriage.Item.divorce(date));
+				} else if (e instanceof MarriageItemRelationContext) {
+					var item     = (MarriageItemRelationContext)e;
+					var date     = JapaneseDate.getInstance(item.date.getText());
+					var relation = Relation.fromString(item.type.getText());
+					var name     = item.name.getText();
+					list.add(Marriage.Item.relation(date, relation, name));
+				} else {
+					logger.error("Unexpected class");
+					logger.error("  class  {}", e.getClass().getName());
+					throw new UnexpectedException("Unexpected class");
+				}
+			}
+			
+			var marriage = new Marriage(familyName, husband, wife, list);
+			logger.info("marriage  {}", marriage);
+			context.marriageList.add(marriage);
 
-		@Override
-		public Void visitMarriageItemMarriage(FamilyRegisterParser.MarriageItemMarriageContext ctx) {
-			var date = ctx.date.getText();
-			var type = ctx.type.getText();
-			logger.info("  {}  MARRIAGE  {}", date, type);
-			return visitChildren(ctx);
-		}
-
-		@Override
-		public Void visitMarriageItemDivorce(FamilyRegisterParser.MarriageItemDivorceContext ctx) {
-			var date = ctx.date.getText();
-			var type = ctx.type.getText();
-			logger.info("  {}  DIVORCE  {}", date, type);
-			return visitChildren(ctx);
-		}
-
-		@Override
-		public Void visitMarriageItemRelation(FamilyRegisterParser.MarriageItemRelationContext ctx) {
-			var date = ctx.date.getText();
-			var type = ctx.type.getText();
-			var name = ctx.name.getText();
-			logger.info("  {}  RELATION  {}  {}", date, type, name);
 			return visitChildren(ctx);
 		}
 	}
