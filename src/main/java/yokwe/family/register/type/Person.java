@@ -8,15 +8,27 @@ import yokwe.util.StringUtil;
 public class Person implements Comparable<Person> {
 	public static class Item {
 		enum Type {
-			BIRTH, DEATH, MARRIAGE,
-			MARRIAGE_JOIN, MARRIAGE_SEPARATE,
-			JOIN, SEPARATE,
-			BRANCH, RETIREMENT,
-			HEAD_OF_HOUSE_BRANCH,
-			HEAD_OF_HOUSE_DEATH,
-			HEAD_OF_HOUSE_RETIREMENT,
-			INHERITANCE,
-			DISINHERITANCE,
+			BIRTH("出生"),
+			DEATH("死亡"),
+			MARRIAGE("結婚"),
+			MARRIAGE_JOIN("結婚入籍"),
+			BRANCH("分家"),
+			RETIREMENT("隠居"),
+			HEAD_OF_HOUSE_BRANCH("戸主_分家"),
+			HEAD_OF_HOUSE_DEATH("戸主_前戸主死亡"),
+			HEAD_OF_HOUSE_RETIREMENT("戸主_前戸主隠居"),
+			INHERITANCE("嗣子"),
+			DISINHERITANCE("廃嫡");
+			
+			public final String value;
+			private Type(String value) {
+				this.value = value;
+			}
+			
+			@Override
+			public String toString() {
+				return value;
+			}
 		}
 		
 		public final JapaneseDate date;
@@ -43,15 +55,6 @@ public class Person implements Comparable<Person> {
 		public static Item marriageJoin(JapaneseDate date, String value) {
 			return new Item(date, Type.MARRIAGE_JOIN, value);
 		}
-		public static Item marriageSeparate(JapaneseDate date, String value) {
-			return new Item(date, Type.MARRIAGE_SEPARATE, value);
-		}
-		public static Item join(JapaneseDate date, String value) {
-			return new Item(date, Type.JOIN, value);
-		}
-		public static Item separate(JapaneseDate date, String value) {
-			return new Item(date, Type.SEPARATE, value);
-		}
 		public static Item branch(JapaneseDate date, String value) {
 			return new Item(date, Type.BRANCH, value);
 		}
@@ -77,9 +80,9 @@ public class Person implements Comparable<Person> {
 		@Override
 		public String toString() {
 			if (value == null) {
-				return String.format("{%s  %s}", date.toString(), type.toString());
+				return String.format("{%s %s}", date.toString(), type.toString());
 			} else {
-				return String.format("{%s  %s  %s}", date.toString(), type.toString(), value);
+				return String.format("{%s %s %s}", date.toString(), type.toString(), value);
 			}
 		}
 	}
