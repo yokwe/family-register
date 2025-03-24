@@ -250,14 +250,15 @@ public class ReadFile {
 		}
 	}
 	
+	
 	public static void checkContext(Context context) {
 		final var personMap = context.personMap;
 		final var familyMap = context.familyMap;
 		
 		logger.info("checkConsistency");
-		logger.info("====================================");
-		int countUnknown = 0;
+		int countWarn = 0;
 		
+		logger.info("====================================");		
 		{
 			var addressSet = new TreeSet<String>();
 			for(var e: personMap.values()) {
@@ -268,12 +269,8 @@ public class ReadFile {
 			}
 		}
 		
-		// FIXME check father in family and father in person
-		
+		logger.info("====================================");
 		{
-			Integer a = 0;
-			a.compareTo(a);
-			
 			var personList = new ArrayList<Person>();
 			for(var e: personMap.values()) {
 				personList.add(e);
@@ -286,134 +283,204 @@ public class ReadFile {
 			}
 		}
 		
-		{
-			var keySet = new HashSet<String>();
-			for(var e: personMap.values()) {
-				if (FamilyRegister.isUnknown(e.father)) {
-					// nothing to do
-				} else {
-					var key = e.father;
-					if (keySet.contains(key)) continue;
-					keySet.add(key);
-					
-					if (!personMap.containsKey(key)) {
-						logger.info("Unknown person father  {}{}  {}", e.familyName, e.name, e.father);
-						countUnknown++;
-					}
-				}
-			}
-		}
-		
-		{
-			var keySet = new HashSet<String>();
-			for(var e: personMap.values()) {
-				for(var ee: e.itemList) {
-					if (ee.isMarriage()) {
-						var key = ee.value;
-						if (keySet.contains(key)) continue;
-						keySet.add(key);
-						
-						if (!personMap.containsKey(key)) {
-							logger.info("Unknown person marriage  {}{}  {}", e.familyName, e.name, ee.value);
-							countUnknown++;
-						}
-					}
-				}
-			}
-		}
-		
-		{
-			var keySet = new HashSet<String>();
-			for(var e: familyMap.values()) {
-				{
-					var key = e.father;
-					if (keySet.contains(key)) continue;
-					keySet.add(key);
-					
-					if (!personMap.containsKey(key)) {
-						logger.info("Unknown family father  {}{}  {}", e.familyName, e.father, e.father);
-						countUnknown++;
-					}
-				}
-			}
-		}
-		
-		{
-			var keySet = new HashSet<String>();
-			for(var e: familyMap.values()) {
-				{
-					var key = e.mother;
-					if (keySet.contains(key)) continue;
-					keySet.add(key);
-					
-					if (!personMap.containsKey(key)) {
-						logger.info("Unknown family mother  {}  {}", e.father, e.mother);
-						countUnknown++;
-					}
-				}
-			}
-		}
-		{
-			var keySet = new HashSet<String>();
-			for(var e: familyMap.values()) {
-				// child
-				for(var ee: e.itemList) {
-					var key = e.familyName + ee.name;
-					if (keySet.contains(key)) continue;
-					keySet.add(key);
-					
-					if (!personMap.containsKey(key)) {
-						logger.info("Unknown family child  {}  {}  {}", e.father, ee.relation, ee.name);
-						countUnknown++;
-					}
-				}
-			}
-		}
-		
-		{
-			for(var e: familyMap.values()) {
-				var father = e.father;
-				var mother = e.mother;
-				
-				// should have marriage or marriageJoin item entry with sama date
-				if (personMap.containsKey(father) && personMap.containsKey(mother)) {
-					var personFather = personMap.get(father);
-					var personMother = personMap.get(mother);
-					
-					var itemListFather = personFather.itemList.stream().
-							filter(o -> o.isMarriage()).
-							filter(o -> o.value.equals(mother)).
-							toList();
-					var itemListMother = personMother.itemList.stream().
-							filter(o -> o.isMarriage()).
-							filter(o -> o.value.equals(father)).
-							toList();
-					
-					if (itemListFather.size() == 1 && itemListMother.size() == 1) {
-						var dateFather = itemListFather.get(0).date;
-						var dateMother = itemListMother.get(0).date;
-						if (dateFather.equals(dateMother)) {
-							// OK
-						} else {
-							logger.info("marriage date is different.  {}  {}  --  {}  {}", father, dateFather, mother, dateMother);
-						}
-					} else if (itemListFather.size() == 0) {
-						logger.info("husband has no marriage.  {}  {}  --  {}  {}", father, mother);
-					} else if (itemListMother.size() == 0) {
-						logger.info("wife has no marriage.  {}  {}  --  {}  {}", father, mother);
-					} else {
-						logger.info("Unexpected marriage item");
-						logger.info("  father  {}", personFather);
-						logger.info("  mother  {}", personMother);
-					}
-				}
-			}
-		}
-
-		
 		logger.info("====================================");
 
-		logger.info("countUnknown  {}", countUnknown);
+		// check person
+		//   check person.father exists in personMap
+		{
+			var set = new HashSet<String>();
+			
+			for(var person: personMap.values()) {
+				var fullNameInPerson  = person.familyName + person.name;
+				var fatherInPerson    = person.father;
+				
+				if (FamilyRegister.isUnknown(fatherInPerson)) continue;
+				if (set.contains(fatherInPerson)) continue;
+				set.add(fatherInPerson);
+				
+				if (personMap.containsKey(fatherInPerson)) {
+					// expected
+				} else {
+					// not expected
+					logger.warn("PERSON  father doesn't exist in personMap  {}  {}",  fullNameInPerson, fatherInPerson);
+					countWarn++;
+				}
+			}
+		}
+		//   check person.father match father in family
+		{
+			for(var person: personMap.values()) {
+				var fullNameInPerson = person.familyName + person.name;
+				var fatherInPerson   = person.father;
+				
+				if (FamilyRegister.isUnknown(fatherInPerson)) continue;
+
+				for(var family: familyMap.values()) {
+					var fatherInFamily = family.father;
+					for(var item: family.itemList) {
+						var fullNameInFamily = family.familyName + item.name;
+						if (fullNameInFamily.equals(fullNameInPerson)) {
+							if (fatherInFamily.equals(fatherInPerson)) {
+								// expect
+							} else {
+								logger.warn("PERSON  father mismatch  {}  {}  {}", fullNameInPerson, fatherInPerson, fatherInFamily);
+								countWarn++;
+							}
+						}
+					}
+				}
+			}
+		}
+		//   check person marriage spouse exists in personMap
+		{
+			for(var person: personMap.values()) {
+				var fullName = person.familyName + person.name;
+				var marriage = person.getMarriage();
+				if (marriage != null) {
+					var spouse = marriage.value;
+					if (personMap.containsKey(spouse)) {
+						// expect
+					} else {
+						logger.warn("PERSON  spouse doesn't exist in personMap  {}  {}",  fullName, spouse);
+						countWarn++;
+					}
+				}
+			}
+		}
+		//   check person birth date match birth date in family
+		{
+			for(var person: personMap.values()) {
+				var fullName = person.familyName + person.name;
+				var birth = person.getBirth();
+				if (birth != null) {
+					var date = birth.date;
+					
+					for(var family: familyMap.values()) {
+						for(var item: family.itemList) {
+							var fullNameInFamily = family.familyName + item.name;
+							if (fullNameInFamily.equals(fullName)) {
+								var dateInFamily = item.date;
+								if (dateInFamily.equals(date)) {
+									// expect
+								} else {
+									logger.warn("PERSON  birth date mismatch  {}  {}  {}", fullName, date, dateInFamily);
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		//   check person relation match relation in family
+		{
+			for(var person: personMap.values()) {
+				var fullName = person.familyName + person.name;
+				var relation = person.relation;
+				for(var family: familyMap.values()) {
+					for(var item: family.itemList) {
+						var fullNameInFamily = family.familyName + item.name;
+						if (fullNameInFamily.equals(fullName)) {
+							var relationInFamily = item.relation;
+							if (relationInFamily.equals(relation)) {
+								// expect
+							} else {
+								logger.warn("PERSON  relation mismatch  {}  {}  {}", fullName, relation, relationInFamily);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// check family
+		//   check family.father exists in personMap
+		{
+			var set = new HashSet<>();
+			for(var family: familyMap.values()) {
+				var fatherInFamily = family.father;
+				if (set.contains(fatherInFamily)) continue;
+				if (personMap.containsKey(fatherInFamily)) {
+					// expected
+				} else {
+					logger.warn("FAMILY  father doesn't exist in personMap  {}",  fatherInFamily);
+					countWarn++;
+					set.add(fatherInFamily);
+				}
+			}
+		}
+		//   check family.mother exists in personMap
+		{
+			var set = new HashSet<>();
+			for(var family: familyMap.values()) {
+				var motherInFamily = family.mother;
+				if (set.contains(motherInFamily)) continue;
+				if (personMap.containsKey(motherInFamily)) {
+					// expected
+				} else {
+					logger.warn("FAMILY  mother doesn't exist in personMap  {}",  motherInFamily);
+					countWarn++;
+					set.add(motherInFamily);
+				}
+			}
+		}
+		//   check family child exists in personMap
+		{
+			for(var family: familyMap.values()) {
+				var familyName = family.familyName;
+				for(var item: family.itemList) {
+					var fullName = familyName + item.name;
+					if (personMap.containsKey(fullName)) {
+						// expected
+					} else {
+						logger.warn("FAMILY  child doesn't exist in personMap  {}",  fullName);
+						countWarn++;
+					}
+				}
+			}
+		}
+		//   check child birth date match in ersonMap
+		{
+			for(var family: familyMap.values()) {
+				var familyName = family.familyName;
+				for(var item: family.itemList) {
+					var date = item.date;
+					var fullName = familyName + item.name;
+					if (personMap.containsKey(fullName)) {
+						var person = personMap.get(fullName);
+						var personItem = person.getBirth();
+						if (personItem != null) {
+							var personDate = personItem.date;
+							if (personDate.equals(date)) {
+								// exptected
+							} else {
+								logger.warn("FAMILY  child birth date mismatch  {}  {}  {}", fullName, date, personDate);
+								countWarn++;
+							}
+						}
+					}
+				}
+			}
+		}
+		//   check child relation match in personMap
+		{
+			for(var family: familyMap.values()) {
+				var familyName = family.familyName;
+				for(var item: family.itemList) {
+					var relation = item.relation;
+					var fullName = familyName + item.name;
+					if (personMap.containsKey(fullName)) {
+						var person = personMap.get(fullName);
+						var personRelation = person.relation;
+						if (personRelation != relation) {
+							logger.warn("FAMILY  child relation mismatch  {}  {}  {}", fullName, relation, personRelation);
+							countWarn++;
+						}
+					}
+				}
+			}
+		}
+		
+		logger.info("countWarn  {}", countWarn);
 	}
 	
 }
