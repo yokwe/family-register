@@ -118,19 +118,18 @@ public class Person implements Comparable<Person> {
 		this.itemList   = itemList;
 	}
 	
-	public String getReference() {
-		if (FamilyRegister.isUnknown(father)) {
-			return name;
-		} else {
-			return father + relation + name;
-		}
-	}
-	public JapaneseDate getBirthDate() {
+	public Item getBirth() {
 		for(var e: itemList) {
-			if (e.type == Item.Type.BIRTH) return e.date;
+			if (e.type == Item.Type.BIRTH) return e;
 		}
-//		logger.info("getBirthDate  UNDEFINED  {}", this);
-		return JapaneseDate.UNDEFINED;
+		return null;
+	}
+	public Item getMarriage() {
+		for(var e: itemList) {
+			if (e.type == Item.Type.MARRIAGE) return e;
+			if (e.type == Item.Type.MARRIAGE_JOIN) return e;
+		}
+		return null;
 	}
 	
 	@Override
@@ -142,9 +141,11 @@ public class Person implements Comparable<Person> {
 	public int compareTo(Person that) {
 		int result = this.father.compareTo(that.father);
 		if (result == 0) {
-			var thisBirthDate = this.getBirthDate();
-			var thatBirthDate = that.getBirthDate();
-			result = thisBirthDate.compareTo(thatBirthDate);
+			var thisBirth = this.getBirth();
+			var thatBirth = that.getBirth();
+			if (thisBirth != null && thatBirth != null) {
+				result = thisBirth.date.compareTo(thatBirth.date);
+			}
 		}
 		return result;
 	}
