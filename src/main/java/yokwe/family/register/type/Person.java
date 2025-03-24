@@ -85,6 +85,10 @@ public class Person implements Comparable<Person> {
 			return new Item(date, Type.DISINHERITANCE);
 		}
 		
+		public boolean isMarriage() {
+			return type == Type.MARRIAGE || type == Type.MARRIAGE_JOIN;
+		}
+		
 		@Override
 		public String toString() {
 			if (value == null) {
@@ -113,7 +117,7 @@ public class Person implements Comparable<Person> {
 	}
 	
 	public String getReference() {
-		if (father.equals("不明")) {
+		if (FamilyRegister.isUnknown(father)) {
 			return name;
 		} else {
 			return father + relation + name;

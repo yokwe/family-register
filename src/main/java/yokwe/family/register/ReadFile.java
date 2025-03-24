@@ -14,16 +14,30 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import yokwe.family.register.antlr.FamilyRegisterBaseVisitor;
 import yokwe.family.register.antlr.FamilyRegisterLexer;
 import yokwe.family.register.antlr.FamilyRegisterParser;
-import yokwe.family.register.antlr.FamilyRegisterParser.*;
-import yokwe.family.register.type.*;
-import yokwe.family.register.type.Person.Item.Type;
+import yokwe.family.register.antlr.FamilyRegisterParser.PersonItemBirthContext;
+import yokwe.family.register.antlr.FamilyRegisterParser.PersonItemBranchContext;
+import yokwe.family.register.antlr.FamilyRegisterParser.PersonItemDeathContext;
+import yokwe.family.register.antlr.FamilyRegisterParser.PersonItemDisinheritanceContext;
+import yokwe.family.register.antlr.FamilyRegisterParser.PersonItemDivorceContext;
+import yokwe.family.register.antlr.FamilyRegisterParser.PersonItemDivorceRejoinContext;
+import yokwe.family.register.antlr.FamilyRegisterParser.PersonItemHeadOfHouseBranchContext;
+import yokwe.family.register.antlr.FamilyRegisterParser.PersonItemHeadOfHouseDeathContext;
+import yokwe.family.register.antlr.FamilyRegisterParser.PersonItemHeadOfHouseRetirementContext;
+import yokwe.family.register.antlr.FamilyRegisterParser.PersonItemInheritanceContext;
+import yokwe.family.register.antlr.FamilyRegisterParser.PersonItemMarriageContext;
+import yokwe.family.register.antlr.FamilyRegisterParser.PersonItemMarriageJoinContext;
+import yokwe.family.register.antlr.FamilyRegisterParser.PersonItemRetirementContext;
+import yokwe.family.register.type.Family;
+import yokwe.family.register.type.FamilyRegister;
+import yokwe.family.register.type.Person;
+import yokwe.family.register.type.Relation;
 import yokwe.util.FileUtil;
 import yokwe.util.JapaneseDate;
 import yokwe.util.UnexpectedException;
 
 public class ReadFile {
 	private static final org.slf4j.Logger logger = yokwe.util.LoggerUtil.getLogger();
-
+	
 	public static void main(String[] args) {
 		logger.info("START");
 		
@@ -33,176 +47,40 @@ public class ReadFile {
 	}
 
 	private static void process() {
-		File[] files = new File("data/family-register").listFiles(o -> o.getName().endsWith(".txt"));
-		Arrays.sort(files);
-		
 		var context = new Context();
-		var visitor = new BuildContext(context);
-
-		for(var file: files) {
-			logger.info("file  {}", file.getPath());
+		{
+			var visitor = new BuildContext(context);
 			
-			final FamilyRegisterLexer lexer;
-			{
-				var string = FileUtil.read().file(file);
-				var charStream = CharStreams.fromString(string);
-				lexer = new FamilyRegisterLexer(charStream);
-			}
-			{
-				lexer.reset();
+			File[] files = new File("data/family-register").listFiles(o -> o.getName().endsWith(".txt"));
+			Arrays.sort(files);
+			
+			for(var file: files) {
+				logger.info("file  {}", file.getPath());
+				
+				final FamilyRegisterLexer lexer;
+				{
+					var string = FileUtil.read().file(file);
+					var charStream = CharStreams.fromString(string);
+					lexer = new FamilyRegisterLexer(charStream);
+				}
+				
 				var parser = new FamilyRegisterParser(new CommonTokenStream(lexer));
-				var tree = parser.body();
-				visitor.visitBody(tree);
+				visitor.visitBody(parser.body());
 				logger.info(
 					"context  address  {}  person  {}  family  {}",
 					context.addressList.size(), context.personMap.size(), context.familyMap.size());
 			}
 		}
-		// check consistency
-		context.checkConsistency();
+		// check context
+		checkContext(context);
 	}
 	
 	public static class Context {
 		public final List<List<String>>  addressList = new ArrayList<>();
 		public final Map<String, Person> personMap  = new TreeMap<>();
-		//               name
+		//               familyName + name
 		public final Map<String, Family> familyMap   = new TreeMap<>();
-		//               name of father
-		
-		public void checkConsistency() {
-			logger.info("checkConsistency");
-			logger.info("====================================");
-			int countUnknown = 0;
-			
-			{
-				var keySet = new HashSet<String>();
-				for(var e: personMap.values()) {
-					if (!e.father.equals("不明")) {
-						var key = e.father;
-						if (keySet.contains(key)) continue;
-						keySet.add(key);
-						
-						if (!personMap.containsKey(key)) {
-							logger.info("Unknown person father  {}{}  {}", e.familyName, e.name, e.father);
-							countUnknown++;
-						}
-					}
-				}
-			}
-			
-			{
-				var keySet = new HashSet<String>();
-				for(var e: personMap.values()) {
-					for(var ee: e.itemList) {
-						if (ee.type == Person.Item.Type.MARRIAGE || ee.type == Person.Item.Type.MARRIAGE_JOIN) {
-							var key = ee.value;
-							if (keySet.contains(key)) continue;
-							keySet.add(key);
-							
-							if (!personMap.containsKey(key)) {
-								logger.info("Unknown person marriage  {}{}  {}", e.familyName, e.name, ee.value);
-								countUnknown++;
-							}
-						}
-					}
-				}
-			}
-			
-			{
-				var keySet = new HashSet<String>();
-				for(var e: familyMap.values()) {
-					// husband
-					{
-						var key = e.husband;
-						if (keySet.contains(key)) continue;
-						keySet.add(key);
-						
-						if (!personMap.containsKey(key)) {
-							logger.info("Unknown family husband  {}{}  {}", e.familyName, e.husband, e.husband);
-							countUnknown++;
-						}
-					}
-				}
-			}
-			
-			{
-				var keySet = new HashSet<String>();
-				for(var e: familyMap.values()) {
-					// wife
-					{
-						var key = e.wife;
-						if (keySet.contains(key)) continue;
-						keySet.add(key);
-						
-						if (!personMap.containsKey(key)) {
-							logger.info("Unknown family wife  {}  {}", e.husband, e.wife);
-							countUnknown++;
-						}
-					}
-				}
-			}
-			{
-				var keySet = new HashSet<String>();
-				for(var e: familyMap.values()) {
-					// child
-					for(var ee: e.itemList) {
-						var key = e.familyName + ee.name;
-						if (keySet.contains(key)) continue;
-						keySet.add(key);
-						
-						if (!personMap.containsKey(key)) {
-							logger.info("Unknown family child  {}  {}  {}", e.husband, ee.relation, ee.name);
-							countUnknown++;
-						}
-					}
-				}
-			}
-			
-			{
-				for(var e: familyMap.values()) {
-					var husband = e.husband;
-					var wife    = e.wife;
-					
-					// should have marriage or marriageJoin item entry with sama date
-					if (personMap.containsKey(husband) && personMap.containsKey(wife)) {
-						var personHusband = personMap.get(husband);
-						var personWife    = personMap.get(wife);
-						
-						var itemListHusband = personHusband.itemList.stream().
-								filter(o -> o.type == Type.MARRIAGE || o.type == Type.MARRIAGE_JOIN).
-								filter(o -> o.value.equals(wife)).
-								toList();
-						var itemListWife    = personWife.itemList.stream().
-								filter(o -> o.type == Type.MARRIAGE || o.type == Type.MARRIAGE_JOIN).
-								filter(o -> o.value.equals(husband)).
-								toList();
-						
-						if (itemListHusband.size() == 1 && itemListWife.size() == 1) {
-							var dateHusband = itemListHusband.get(0).date;
-							var dateWife    = itemListWife.get(0).date;
-							if (dateHusband.equals(dateWife)) {
-								// OK
-							} else {
-								logger.info("marriage date is different.  {}  {}  --  {}  {}", husband, dateHusband, wife, dateWife);
-							}
-						} else if (itemListHusband.size() == 0) {
-							logger.info("husband has no marriage.  {}  {}  --  {}  {}", husband, wife);
-						} else if (itemListWife.size() == 0) {
-							logger.info("wife has no marriage.  {}  {}  --  {}  {}", husband, wife);
-						} else {
-							logger.info("Unexpected marriage item");
-							logger.info("  husband  {}", personHusband);
-							logger.info("  wife     {}", personWife);
-						}
-					}
-				}
-			}
-
-			
-			logger.info("====================================");
-
-			logger.info("countUnknown  {}", countUnknown);
-		}
+		//               father
 	}
 	
 	public static class BuildContext extends FamilyRegisterBaseVisitor<Void> {
@@ -211,6 +89,7 @@ public class ReadFile {
 		public BuildContext(Context context) {
 			this.context = context;
 		}
+		
 		//
 		// AddressBlock
 		//
@@ -330,7 +209,7 @@ public class ReadFile {
 		
 		
 		//
-		// Family
+		// FamilyBlock
 		//
 		@Override
 		public Void visitFamilyBlock(FamilyRegisterParser.FamilyBlockContext ctx) {
@@ -368,4 +247,145 @@ public class ReadFile {
 			return visitChildren(ctx);
 		}
 	}
+	
+	public static void checkContext(Context context) {
+		final var personMap = context.personMap;
+		final var familyMap = context.familyMap;
+		
+		logger.info("checkConsistency");
+		logger.info("====================================");
+		int countUnknown = 0;
+		
+		{
+			var keySet = new HashSet<String>();
+			for(var e: personMap.values()) {
+				if (FamilyRegister.isUnknown(e.father)) {
+					// nothing to do
+				} else {
+					var key = e.father;
+					if (keySet.contains(key)) continue;
+					keySet.add(key);
+					
+					if (!personMap.containsKey(key)) {
+						logger.info("Unknown person father  {}{}  {}", e.familyName, e.name, e.father);
+						countUnknown++;
+					}
+				}
+			}
+		}
+		
+		{
+			var keySet = new HashSet<String>();
+			for(var e: personMap.values()) {
+				for(var ee: e.itemList) {
+					if (ee.isMarriage()) {
+						var key = ee.value;
+						if (keySet.contains(key)) continue;
+						keySet.add(key);
+						
+						if (!personMap.containsKey(key)) {
+							logger.info("Unknown person marriage  {}{}  {}", e.familyName, e.name, ee.value);
+							countUnknown++;
+						}
+					}
+				}
+			}
+		}
+		
+		{
+			var keySet = new HashSet<String>();
+			for(var e: familyMap.values()) {
+				// husband
+				{
+					var key = e.husband;
+					if (keySet.contains(key)) continue;
+					keySet.add(key);
+					
+					if (!personMap.containsKey(key)) {
+						logger.info("Unknown family husband  {}{}  {}", e.familyName, e.husband, e.husband);
+						countUnknown++;
+					}
+				}
+			}
+		}
+		
+		{
+			var keySet = new HashSet<String>();
+			for(var e: familyMap.values()) {
+				// wife
+				{
+					var key = e.wife;
+					if (keySet.contains(key)) continue;
+					keySet.add(key);
+					
+					if (!personMap.containsKey(key)) {
+						logger.info("Unknown family wife  {}  {}", e.husband, e.wife);
+						countUnknown++;
+					}
+				}
+			}
+		}
+		{
+			var keySet = new HashSet<String>();
+			for(var e: familyMap.values()) {
+				// child
+				for(var ee: e.itemList) {
+					var key = e.familyName + ee.name;
+					if (keySet.contains(key)) continue;
+					keySet.add(key);
+					
+					if (!personMap.containsKey(key)) {
+						logger.info("Unknown family child  {}  {}  {}", e.husband, ee.relation, ee.name);
+						countUnknown++;
+					}
+				}
+			}
+		}
+		
+		{
+			for(var e: familyMap.values()) {
+				var husband = e.husband;
+				var wife    = e.wife;
+				
+				// should have marriage or marriageJoin item entry with sama date
+				if (personMap.containsKey(husband) && personMap.containsKey(wife)) {
+					var personHusband = personMap.get(husband);
+					var personWife    = personMap.get(wife);
+					
+					var itemListHusband = personHusband.itemList.stream().
+							filter(o -> o.isMarriage()).
+							filter(o -> o.value.equals(wife)).
+							toList();
+					var itemListWife    = personWife.itemList.stream().
+							filter(o -> o.isMarriage()).
+							filter(o -> o.value.equals(husband)).
+							toList();
+					
+					if (itemListHusband.size() == 1 && itemListWife.size() == 1) {
+						var dateHusband = itemListHusband.get(0).date;
+						var dateWife    = itemListWife.get(0).date;
+						if (dateHusband.equals(dateWife)) {
+							// OK
+						} else {
+							logger.info("marriage date is different.  {}  {}  --  {}  {}", husband, dateHusband, wife, dateWife);
+						}
+					} else if (itemListHusband.size() == 0) {
+						logger.info("husband has no marriage.  {}  {}  --  {}  {}", husband, wife);
+					} else if (itemListWife.size() == 0) {
+						logger.info("wife has no marriage.  {}  {}  --  {}  {}", husband, wife);
+					} else {
+						logger.info("Unexpected marriage item");
+						logger.info("  husband  {}", personHusband);
+						logger.info("  wife     {}", personWife);
+					}
+				}
+			}
+		}
+
+		
+		logger.info("====================================");
+
+		logger.info("countUnknown  {}", countUnknown);
+	}
+	
 }
