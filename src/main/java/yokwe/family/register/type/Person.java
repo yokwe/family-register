@@ -6,6 +6,8 @@ import yokwe.util.JapaneseDate;
 import yokwe.util.StringUtil;
 
 public class Person implements Comparable<Person> {
+	private static final org.slf4j.Logger logger = yokwe.util.LoggerUtil.getLogger();
+	
 	public static class Item {
 		public enum Type {
 			BIRTH("出生"),
@@ -123,6 +125,13 @@ public class Person implements Comparable<Person> {
 			return father + relation + name;
 		}
 	}
+	public JapaneseDate getBirthDate() {
+		for(var e: itemList) {
+			if (e.type == Item.Type.BIRTH) return e.date;
+		}
+//		logger.info("getBirthDate  UNDEFINED  {}", this);
+		return JapaneseDate.UNDEFINED;
+	}
 	
 	@Override
 	public String toString() {
@@ -131,6 +140,12 @@ public class Person implements Comparable<Person> {
 
 	@Override
 	public int compareTo(Person that) {
-		return this.getReference().compareTo(that.getReference());
+		int result = this.father.compareTo(that.father);
+		if (result == 0) {
+			var thisBirthDate = this.getBirthDate();
+			var thatBirthDate = that.getBirthDate();
+			result = thisBirthDate.compareTo(thatBirthDate);
+		}
+		return result;
 	}
 }

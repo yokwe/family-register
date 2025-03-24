@@ -30,14 +30,14 @@ public class Family implements Comparable<Family> {
 	}
 	
 	public final String     familyName;
-	public final String     husband;
-	public final String     wife;
+	public final String     father;
+	public final String     mother;
 	public final List<Item> itemList;
 	
-	public Family(String familyName, String husband, String wife, List<Item> itemList) {
+	public Family(String familyName, String father, String mother, List<Item> itemList) {
 		this.familyName = familyName;
-		this.husband    = husband;
-		this.wife       = wife;
+		this.father     = father;
+		this.mother     = mother;
 		this.itemList   = itemList;	
 	}
 	
@@ -48,6 +48,6 @@ public class Family implements Comparable<Family> {
 	
 	@Override
 	public int compareTo(Family that) {
-		return this.husband.compareTo(that.husband);
+		return this.father.compareTo(that.father);
 	}
 }

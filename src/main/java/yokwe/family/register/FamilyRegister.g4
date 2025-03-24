@@ -14,8 +14,8 @@ FAMILY:					'家族';
 
 ITEM:					'事項';
 
-
 FATHER:					'父親';
+MOTHER:					'母親';
 RELATION:				'続柄';
 FAMILY_NAME:			'名字';
 NAME:					'名前';
@@ -33,9 +33,6 @@ DEATH_OF_PREVIOUS:		'前戸主死亡';
 RETIREMENT_OF_PREVIOUS:	'前戸主隠居';
 INHERITANCE:			'嗣子';
 DISINHERITANCE:			'廃嫡';
-
-HUSBAND:				'夫';
-WIFE:					'妻';
 
 
 JAPANESE_RELATION:	[長二三四五]?[男女];
@@ -74,7 +71,7 @@ block
 	;
 
 addressBlock
-	: ADDRESS BLOCK_BEGIN addressBlockItem+ BLOCK_END
+	: ADDRESS BLOCK_BEGIN addressBlockItem* BLOCK_END
 	;
 addressBlockItem
 	: value=JAPANESE_STRING
@@ -84,23 +81,8 @@ addressBlockItem
 personBlock
 	: PERSON BLOCK_BEGIN addressValue fatherValue relationValue familyNameValue nameValue personItemBlock BLOCK_END
 	;
-addressValue
-	: ADDRESS value=JAPANESE_STRING
-	;
-fatherValue
-	: FATHER value=JAPANESE_STRING
-	;
-relationValue
-	: RELATION value=JAPANESE_RELATION
-	;
-familyNameValue
-	: FAMILY_NAME value=JAPANESE_STRING
-	;
-nameValue
-	: NAME value=JAPANESE_STRING
-	;
 personItemBlock
-	: ITEM BLOCK_BEGIN personItemValue+ BLOCK_END
+	: ITEM BLOCK_BEGIN personItemValue* BLOCK_END
 	;
 personItemValue
 	: date=JAPANESE_DATE BIRTH															#  PersonItemBirth
@@ -120,17 +102,31 @@ personItemValue
 
 
 familyBlock
-	: FAMILY BLOCK_BEGIN familyNameValue husbandValue wifeValue familyItemBlock BLOCK_END
+	: FAMILY BLOCK_BEGIN familyNameValue fatherValue motherValue familyItemBlock BLOCK_END
 	;
 familyItemBlock
-	: ITEM BLOCK_BEGIN familyItemValue+ BLOCK_END
+	: ITEM BLOCK_BEGIN familyItemValue* BLOCK_END
 	;
 familyItemValue
 	: date=JAPANESE_DATE type=JAPANESE_RELATION name=JAPANESE_STRING
 	;
-husbandValue
-	: HUSBAND value=JAPANESE_STRING
+
+
+addressValue
+	: ADDRESS value=JAPANESE_STRING
 	;
-wifeValue
-	: WIFE value=JAPANESE_STRING
+fatherValue
+	: FATHER value=JAPANESE_STRING
+	;
+motherValue
+	: MOTHER value=JAPANESE_STRING
+	;
+relationValue
+	: RELATION value=JAPANESE_RELATION
+	;
+familyNameValue
+	: FAMILY_NAME value=JAPANESE_STRING
+	;
+nameValue
+	: NAME value=JAPANESE_STRING
 	;

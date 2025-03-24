@@ -3,10 +3,12 @@ package yokwe.family.register;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -215,8 +217,8 @@ public class ReadFile {
 		public Void visitFamilyBlock(FamilyRegisterParser.FamilyBlockContext ctx) {
 			// familyNameValue husbandValue wifeValue
 			var familyName = ctx.familyNameValue().value.getText();
-			var husband    = ctx.husbandValue().value.getText();
-			var wife       = ctx.wifeValue().value.getText();
+			var father     = ctx.fatherValue().value.getText();
+			var mother     = ctx.motherValue().value.getText();
 			
 			// build list
 			var list = new ArrayList<Family.Item>();
@@ -227,10 +229,10 @@ public class ReadFile {
 				list.add(Family.Item.relation(date, relation, name));
 			}
 			
-			var family = new Family(familyName, husband, wife, list);
+			var family = new Family(familyName, father, mother, list);
 //			logger.info("family  {}", family);
 			{
-				var key = family.familyName + family.husband;
+				var key = family.familyName + family.father;
 				if (context.familyMap.containsKey(key)) {
 					logger.error("Duplicate family");
 					logger.error("  key  {}", key);
@@ -242,7 +244,7 @@ public class ReadFile {
 				}
 			}
 
-			context.familyMap.put(family.husband, family);
+			context.familyMap.put(family.father, family);
 
 			return visitChildren(ctx);
 		}
@@ -255,6 +257,34 @@ public class ReadFile {
 		logger.info("checkConsistency");
 		logger.info("====================================");
 		int countUnknown = 0;
+		
+		{
+			var addressSet = new TreeSet<String>();
+			for(var e: personMap.values()) {
+				addressSet.add(e.address);
+			}
+			for(var e: addressSet) {
+				logger.info("address  {}", e);
+			}
+		}
+		
+		// FIXME check father in family and father in person
+		
+		{
+			Integer a = 0;
+			a.compareTo(a);
+			
+			var personList = new ArrayList<Person>();
+			for(var e: personMap.values()) {
+				personList.add(e);
+			}
+			Collections.sort(personList);
+			for(var e: personList) {
+				logger.info("person  {}  {}  {}{}", e.father, e.relation, e.familyName, e.name);
+//				var birthDate = e.getBirthDate();
+//				logger.info("person  {}  {}  {}{}  {}  {}  {}  {}", e.father, e.relation, e.familyName, e.name, birthDate, birthDate.year, birthDate.month, birthDate.day);
+			}
+		}
 		
 		{
 			var keySet = new HashSet<String>();
@@ -295,14 +325,13 @@ public class ReadFile {
 		{
 			var keySet = new HashSet<String>();
 			for(var e: familyMap.values()) {
-				// husband
 				{
-					var key = e.husband;
+					var key = e.father;
 					if (keySet.contains(key)) continue;
 					keySet.add(key);
 					
 					if (!personMap.containsKey(key)) {
-						logger.info("Unknown family husband  {}{}  {}", e.familyName, e.husband, e.husband);
+						logger.info("Unknown family father  {}{}  {}", e.familyName, e.father, e.father);
 						countUnknown++;
 					}
 				}
@@ -312,14 +341,13 @@ public class ReadFile {
 		{
 			var keySet = new HashSet<String>();
 			for(var e: familyMap.values()) {
-				// wife
 				{
-					var key = e.wife;
+					var key = e.mother;
 					if (keySet.contains(key)) continue;
 					keySet.add(key);
 					
 					if (!personMap.containsKey(key)) {
-						logger.info("Unknown family wife  {}  {}", e.husband, e.wife);
+						logger.info("Unknown family mother  {}  {}", e.father, e.mother);
 						countUnknown++;
 					}
 				}
@@ -335,7 +363,7 @@ public class ReadFile {
 					keySet.add(key);
 					
 					if (!personMap.containsKey(key)) {
-						logger.info("Unknown family child  {}  {}  {}", e.husband, ee.relation, ee.name);
+						logger.info("Unknown family child  {}  {}  {}", e.father, ee.relation, ee.name);
 						countUnknown++;
 					}
 				}
@@ -344,39 +372,39 @@ public class ReadFile {
 		
 		{
 			for(var e: familyMap.values()) {
-				var husband = e.husband;
-				var wife    = e.wife;
+				var father = e.father;
+				var mother = e.mother;
 				
 				// should have marriage or marriageJoin item entry with sama date
-				if (personMap.containsKey(husband) && personMap.containsKey(wife)) {
-					var personHusband = personMap.get(husband);
-					var personWife    = personMap.get(wife);
+				if (personMap.containsKey(father) && personMap.containsKey(mother)) {
+					var personFather = personMap.get(father);
+					var personMother = personMap.get(mother);
 					
-					var itemListHusband = personHusband.itemList.stream().
+					var itemListFather = personFather.itemList.stream().
 							filter(o -> o.isMarriage()).
-							filter(o -> o.value.equals(wife)).
+							filter(o -> o.value.equals(mother)).
 							toList();
-					var itemListWife    = personWife.itemList.stream().
+					var itemListMother = personMother.itemList.stream().
 							filter(o -> o.isMarriage()).
-							filter(o -> o.value.equals(husband)).
+							filter(o -> o.value.equals(father)).
 							toList();
 					
-					if (itemListHusband.size() == 1 && itemListWife.size() == 1) {
-						var dateHusband = itemListHusband.get(0).date;
-						var dateWife    = itemListWife.get(0).date;
-						if (dateHusband.equals(dateWife)) {
+					if (itemListFather.size() == 1 && itemListMother.size() == 1) {
+						var dateFather = itemListFather.get(0).date;
+						var dateMother = itemListMother.get(0).date;
+						if (dateFather.equals(dateMother)) {
 							// OK
 						} else {
-							logger.info("marriage date is different.  {}  {}  --  {}  {}", husband, dateHusband, wife, dateWife);
+							logger.info("marriage date is different.  {}  {}  --  {}  {}", father, dateFather, mother, dateMother);
 						}
-					} else if (itemListHusband.size() == 0) {
-						logger.info("husband has no marriage.  {}  {}  --  {}  {}", husband, wife);
-					} else if (itemListWife.size() == 0) {
-						logger.info("wife has no marriage.  {}  {}  --  {}  {}", husband, wife);
+					} else if (itemListFather.size() == 0) {
+						logger.info("husband has no marriage.  {}  {}  --  {}  {}", father, mother);
+					} else if (itemListMother.size() == 0) {
+						logger.info("wife has no marriage.  {}  {}  --  {}  {}", father, mother);
 					} else {
 						logger.info("Unexpected marriage item");
-						logger.info("  husband  {}", personHusband);
-						logger.info("  wife     {}", personWife);
+						logger.info("  father  {}", personFather);
+						logger.info("  mother  {}", personMother);
 					}
 				}
 			}
