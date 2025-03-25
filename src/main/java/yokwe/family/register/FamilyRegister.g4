@@ -104,7 +104,7 @@ itemValue
 
 
 familyBlock
-	: FAMILY BLOCK_BEGIN addressValue? familyNameValue motherValue fatherValue childBlock+ BLOCK_END
+	: FAMILY BLOCK_BEGIN addressValue familyNameValue motherValue fatherValue childBlock+ BLOCK_END
 	;
 childBlock
 	: CHILD BLOCK_BEGIN addressValue? relationValue nameValue itemBlock? BLOCK_END
