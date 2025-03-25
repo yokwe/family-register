@@ -88,7 +88,7 @@ public class ReadFile {
 //				logger.info("  value  {}", value);
 				addressList.add(value);
 			}
-			logger.info("address  {}", addressList);
+//			logger.info("address  {}", addressList);
 			context.addressList.add(addressList);
 			
 			return visitChildren(ctx);
@@ -113,7 +113,7 @@ public class ReadFile {
 			
 			// addressValue familyNameValue fatherValue relationValue nameValue itemBlock?
 			var person = new Person(address, familyName, father, relation, name, eventList);
-			logger.info("person  {}", person);
+//			logger.info("person  {}", person);
 			{
 				var key = person.familyName + person.name;
 				if (context.personMap.containsKey(key)) {
@@ -138,7 +138,7 @@ public class ReadFile {
 		@Override
 		public Void visitFamilyBlock(FamilyRegisterParser.FamilyBlockContext ctx) {
 			// addressValue? familyNameValue motherValue fatherValue childBlock+
-			var address    = ctx.addressValue() == null ? null : ctx.addressValue().getText();
+			var address    = ctx.addressValue().value.getText();
 			var familyName = ctx.familyNameValue().value.getText();
 			var mother     = ctx.motherValue().value.getText();
 			var father     = ctx.fatherValue().value.getText();
@@ -148,7 +148,7 @@ public class ReadFile {
 			if (ctx.childBlock() != null) {
 				// addressValue? relationValue nameValue itemBlock?
 				for(var e: ctx.childBlock()) {
-					var childAddress  = e.addressValue() == null ? null : e.addressValue().value.getText();
+					var childAddress  = e.addressValue() == null ? address : e.addressValue().value.getText();
 					var relation = Relation.fromString(e.relationValue().value.getText());
 					var name     = e.nameValue().value.getText();
 					
@@ -160,7 +160,7 @@ public class ReadFile {
 			}
 			
 			var family = new Family(address, familyName, mother, father, childList);
-			logger.info("family  {}", family);
+//			logger.info("family  {}", family);
 			{
 				var key = family.father;
 				if (context.familyMap.containsKey(key)) {
@@ -173,7 +173,6 @@ public class ReadFile {
 					context.familyMap.put(key, family);
 				}
 			}
-			// FIXME add family child as Person
 			{
 				for(var child: childList) {
 					var relation = child.relation;
@@ -191,7 +190,7 @@ public class ReadFile {
 							throw new UnexpectedException("Duplicate person");
 						} else {
 							context.personMap.put(key, person);
-							logger.info("person key  {}", key);
+							logger.info("child  key  {}", key);
 						}
 					}
 				}
@@ -275,20 +274,27 @@ public class ReadFile {
 		final var familyMap = context.familyMap;
 		
 		logger.info("checkConsistency");
+		logger.info("====================================");
+		logger.info("addressList  {}", context.addressList.size());
+		logger.info("personMap    {}", context.personMap.size());
+		logger.info("familyMap    {}", context.familyMap.size());
+		{
+			int count = 0;
+			for(var family: familyMap.values()) {
+				count += family.childList.size();
+			}
+			logger.info("child        {}", count);
+		}
 		int countWarn = 0;
-		logger.info("====================================");		
-		logger.info("personMap  {}", personMap.size());
-		logger.info("familyMap  {}", familyMap.size());
 		{
 			var addressSet = new TreeSet<String>();
 			for(var e: personMap.values()) {
-				if (e.address == null) continue; // FIXME
-				
 				addressSet.add(e.address);
 			}
-			for(var e: addressSet) {
-				logger.info("address  {}", e);
-			}
+			logger.info("address      {}", addressSet.size());
+//			for(var e: addressSet) {
+//				logger.info("address  {}", e);
+//			}
 		}
 		
 		logger.info("====================================");
@@ -306,7 +312,6 @@ public class ReadFile {
 		}
 		
 		logger.info("====================================");
-
 		// check person
 		//   check person.father exists in personMap
 		{
