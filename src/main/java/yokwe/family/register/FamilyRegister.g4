@@ -3,36 +3,38 @@ grammar FamilyRegister;
 //
 // concrete lexer rule first
 //
-BLOCK_BEGIN:			'{';
-BLOCK_END:				'}';
+BLOCK_BEGIN:		'{';
+BLOCK_END:			'}';
 
-FAMILY_REGISTER:		'戸籍';
+FAMILY_REGISTER:	'戸籍';
 
-ADDRESS:				'本籍';
-PERSON:					'人物';
-FAMILY:					'家族';
+// block
+ADDRESS:			'本籍';
+PERSON:				'人物';
+FAMILY:				'家族';
+ITEM:				'事項';
+CHILD:				'子供';
 
-ITEM:					'事項';
+FATHER:				'父親';
+MOTHER:				'母親';
+RELATION:			'続柄';
+FAMILY_NAME:		'名字';
+NAME:				'名前';
 
-FATHER:					'父親';
-MOTHER:					'母親';
-RELATION:				'続柄';
-FAMILY_NAME:			'名字';
-NAME:					'名前';
-
-BIRTH:					'出生';
-DEATH:					'死亡';
-HEAD_OF_HOUSE:			'戸主';
-BRANCH:					'分家';
-MARRIAGE:				'結婚';
-MARRIAGE_JOIN:			'結婚入籍';
-DIVORCE:				'離婚';
-DIVORCE_REJOIN:			'離婚復籍';
-RETIREMENT:				'隠居';
-DEATH_OF_PREVIOUS:		'前戸主死亡';
-RETIREMENT_OF_PREVIOUS:	'前戸主隠居';
-INHERITANCE:			'嗣子';
-DISINHERITANCE:			'廃嫡';
+BIRTH:				'出生';
+DEATH:				'死亡';
+BRANCH:				'分家';
+HEAD_OF_HOUSE:		'戸主';
+RETIRE:				'隠居';
+INHERIT:			'相続';
+DEATH_OF_HEAD:		'戸主死亡';
+RETIRE_OF_HEAD:		'戸主隠居';
+MARRIAGE:			'結婚';
+MARRIAGE_JOIN:		'結婚入籍';
+DIVORCE:			'離婚';
+DIVORCE_REJOIN:		'離婚復籍';
+SUCCESSOR:			'嗣子';
+DISINHERIT:			'廃嫡';
 
 
 JAPANESE_RELATION:	[長二三四五]?[男女];
@@ -79,38 +81,35 @@ addressBlockItem
 	
 	
 personBlock
-	: PERSON BLOCK_BEGIN addressValue fatherValue relationValue familyNameValue nameValue personItemBlock BLOCK_END
+	: PERSON BLOCK_BEGIN addressValue familyNameValue fatherValue relationValue nameValue itemBlock? BLOCK_END
 	;
-personItemBlock
-	: ITEM BLOCK_BEGIN personItemValue* BLOCK_END
+itemBlock
+	: ITEM BLOCK_BEGIN itemValue* BLOCK_END
 	;
-personItemValue
-	: date=JAPANESE_DATE BIRTH															#  PersonItemBirth
-	| date=JAPANESE_DATE DEATH															#  PersonItemDeath
-	| date=JAPANESE_DATE MARRIAGE spouse=JAPANESE_STRING								#  PersonItemMarriage
-	| date=JAPANESE_DATE MARRIAGE_JOIN spouse=JAPANESE_STRING							#  PersonItemMarriageJoin
-	| date=JAPANESE_DATE DIVORCE														#  PersonItemDivorce
-	| date=JAPANESE_DATE DIVORCE_REJOIN													#  PersonItemDivorceRejoin
-	| date=JAPANESE_DATE BRANCH address=JAPANESE_STRING									#  PersonItemBranch
-	| date=JAPANESE_DATE RETIREMENT newHead=JAPANESE_STRING								#  PersonItemRetirement
-	| date=JAPANESE_DATE HEAD_OF_HOUSE BRANCH											#  PersonItemHeadOfHouseBranch
-	| date=JAPANESE_DATE HEAD_OF_HOUSE DEATH_OF_PREVIOUS prevHead=JAPANESE_STRING		#  PersonItemHeadOfHouseDeath
-	| date=JAPANESE_DATE HEAD_OF_HOUSE RETIREMENT_OF_PREVIOUS prevHead=JAPANESE_STRING	#  PersonItemHeadOfHouseRetirement
-	| date=JAPANESE_DATE INHERITANCE													#  PersonItemInheritance
-	| date=JAPANESE_DATE DISINHERITANCE													#  PersonItemDisinheritance
+itemValue
+	: date=JAPANESE_DATE BIRTH													#  ItemBirth
+	| date=JAPANESE_DATE DEATH													#  ItemDeath
+	| date=JAPANESE_DATE HEAD_OF_HOUSE											#  ItemHeadOfHouse
+	| date=JAPANESE_DATE BRANCH						address=JAPANESE_STRING		#  ItemBranch
+	| date=JAPANESE_DATE RETIRE						newHead=JAPANESE_STRING		#  ItemRetire
+	| date=JAPANESE_DATE INHERIT DEATH_OF_HEAD		oldHead=JAPANESE_STRING		#  ItemInheritDeath
+	| date=JAPANESE_DATE INHERIT RETIRE_OF_HEAD		oldHead=JAPANESE_STRING		#  ItemInheritRetire
+	| date=JAPANESE_DATE MARRIAGE					spouse=JAPANESE_STRING		#  ItemMarriage
+	| date=JAPANESE_DATE MARRIAGE_JOIN				spouse=JAPANESE_STRING		#  ItemMarriageJoin
+	| date=JAPANESE_DATE DIVORCE												#  ItemDivorce
+	| date=JAPANESE_DATE DIVORCE_REJOIN				address=JAPANESE_STRING		#  ItemDivorceRejoin
+	| date=JAPANESE_DATE SUCCESSOR												#  ItemSuccessor
+	| date=JAPANESE_DATE DISINHERIT												#  ItemDisinherit
 	;
 
 
 familyBlock
-	: FAMILY BLOCK_BEGIN familyNameValue fatherValue motherValue familyItemBlock BLOCK_END
+	: FAMILY BLOCK_BEGIN addressValue? familyNameValue motherValue fatherValue childBlock+ BLOCK_END
 	;
-familyItemBlock
-	: ITEM BLOCK_BEGIN familyItemValue* BLOCK_END
+childBlock
+	: CHILD BLOCK_BEGIN addressValue? relationValue nameValue itemBlock? BLOCK_END
 	;
-familyItemValue
-	: date=JAPANESE_DATE type=JAPANESE_RELATION name=JAPANESE_STRING
-	;
-
+	
 
 addressValue
 	: ADDRESS value=JAPANESE_STRING
