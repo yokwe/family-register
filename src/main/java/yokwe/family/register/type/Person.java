@@ -6,20 +6,19 @@ import yokwe.util.JapaneseDate;
 import yokwe.util.StringUtil;
 
 public class Person implements Comparable<Person> {
-	private static final org.slf4j.Logger logger = yokwe.util.LoggerUtil.getLogger();
-	
-	//addressValue familyNameValue fatherValue relationValue nameValue itemBlock
 	public final String   address;
 	public final String   familyName;
+	public final String   mother;
 	public final String   father;
 	public final Relation relation;
 	public final String   name;
 	
 	public final List<Event> eventList;
 	
-	public Person(String address, String familyName, String father, Relation relation, String name, List<Event> itemList) {
+	public Person(String address, String familyName, String mother, String father, Relation relation, String name, List<Event> itemList) {
 		this.address    = address;
 		this.familyName = familyName;
+		this.mother     = mother;
 		this.father     = father;
 		this.relation   = relation;
 		this.name       = name;

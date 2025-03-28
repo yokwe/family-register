@@ -13,7 +13,8 @@ ADDRESS:			'本籍';
 PERSON:				'人物';
 FAMILY:				'家族';
 ITEM:				'事項';
-CHILD:				'子供';
+BIOLOGICAL_CHILD:	'実子';
+ADOPTED_CHILD:		'養子';
 
 FATHER:				'父親';
 MOTHER:				'母親';
@@ -24,6 +25,7 @@ NAME:				'名前';
 BIRTH:				'出生';
 DEATH:				'死亡';
 BRANCH:				'分家';
+BRANCH_HEAD:		'分家戸主';
 HEAD_OF_HOUSE:		'戸主';
 RETIRE:				'隠居';
 INHERIT:			'相続';
@@ -33,6 +35,8 @@ MARRIAGE:			'結婚';
 MARRIAGE_JOIN:		'結婚入籍';
 DIVORCE:			'離婚';
 DIVORCE_REJOIN:		'離婚復籍';
+ADOPT_JOIN:			'養子入籍';
+
 SUCCESSOR:			'嗣子';
 DISINHERIT:			'廃嫡';
 
@@ -83,6 +87,23 @@ addressBlockItem
 personBlock
 	: PERSON BLOCK_BEGIN addressValue familyNameValue fatherValue relationValue nameValue itemBlock? BLOCK_END
 	;
+
+
+familyBlock
+	: FAMILY BLOCK_BEGIN addressValue familyNameValue motherValue fatherValue childBlock+ BLOCK_END
+	;
+childBlock
+	: biologicalChildBlock # BiolgicalChild
+	| adoptedChildBlock    # AdoptedChild
+	;
+biologicalChildBlock
+	: BIOLOGICAL_CHILD BLOCK_BEGIN addressValue? relationValue nameValue itemBlock? BLOCK_END
+	;
+adoptedChildBlock
+	: ADOPTED_CHILD BLOCK_BEGIN addressValue familyNameValue fatherValue relationValue nameValue itemBlock? BLOCK_END
+	;
+
+
 itemBlock
 	: ITEM BLOCK_BEGIN itemValue* BLOCK_END
 	;
@@ -98,18 +119,12 @@ itemValue
 	| date=JAPANESE_DATE MARRIAGE_JOIN				spouse=JAPANESE_STRING		#  ItemMarriageJoin
 	| date=JAPANESE_DATE DIVORCE												#  ItemDivorce
 	| date=JAPANESE_DATE DIVORCE_REJOIN				address=JAPANESE_STRING		#  ItemDivorceRejoin
+	| date=JAPANESE_DATE ADOPT_JOIN					father=JAPANESE_STRING		#  ItemAdoptJoin
 	| date=JAPANESE_DATE SUCCESSOR												#  ItemSuccessor
 	| date=JAPANESE_DATE DISINHERIT												#  ItemDisinherit
-	;
-
-
-familyBlock
-	: FAMILY BLOCK_BEGIN addressValue familyNameValue motherValue fatherValue childBlock+ BLOCK_END
-	;
-childBlock
-	: CHILD BLOCK_BEGIN addressValue? relationValue nameValue itemBlock? BLOCK_END
-	;
 	
+	;
+
 
 addressValue
 	: ADDRESS value=JAPANESE_STRING

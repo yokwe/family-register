@@ -17,6 +17,7 @@ public class Event {
 		MARRIAGE_JOIN ("結婚入籍"),
 		DIVORCE       ("離婚"),
 		DIVORCE_REJOIN("離婚復籍"),
+		ADOPT_JOIN    ("養子入籍"),
 		SUCCESSOR     ("嗣子"),
 		DISINHERIT    ("廃嫡");
 		
@@ -100,6 +101,9 @@ public class Event {
 	}
 	public static Event divorceRejoin(JapaneseDate date) {
 		return new Event(date, Type.DIVORCE_REJOIN);
+	}
+	public static Event adoptJoin(JapaneseDate date, String value) {
+		return new Event(date, Type.ADOPT_JOIN, value);
 	}
 	public static Event successor(JapaneseDate date) {
 		return new Event(date, Type.SUCCESSOR);
