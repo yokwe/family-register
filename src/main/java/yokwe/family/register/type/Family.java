@@ -16,7 +16,7 @@ public class Family implements Comparable<Family> {
 		this.familyName = familyName;
 		this.mother     = mother;
 		this.father     = father;
-		this.childList  = childList;	
+		this.childList  = childList;
 	}
 	
 	@Override
