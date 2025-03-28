@@ -3,7 +3,6 @@ package yokwe.family.register;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -16,8 +15,28 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import yokwe.family.register.antlr.FamilyRegisterBaseVisitor;
 import yokwe.family.register.antlr.FamilyRegisterLexer;
 import yokwe.family.register.antlr.FamilyRegisterParser;
-import yokwe.family.register.antlr.FamilyRegisterParser.*;
-import yokwe.family.register.type.*;
+import yokwe.family.register.antlr.FamilyRegisterParser.AdoptedChildContext;
+import yokwe.family.register.antlr.FamilyRegisterParser.BiolgicalChildContext;
+import yokwe.family.register.antlr.FamilyRegisterParser.ItemAdoptJoinContext;
+import yokwe.family.register.antlr.FamilyRegisterParser.ItemBirthContext;
+import yokwe.family.register.antlr.FamilyRegisterParser.ItemBlockContext;
+import yokwe.family.register.antlr.FamilyRegisterParser.ItemBranchContext;
+import yokwe.family.register.antlr.FamilyRegisterParser.ItemDeathContext;
+import yokwe.family.register.antlr.FamilyRegisterParser.ItemDisinheritContext;
+import yokwe.family.register.antlr.FamilyRegisterParser.ItemDivorceContext;
+import yokwe.family.register.antlr.FamilyRegisterParser.ItemDivorceRejoinContext;
+import yokwe.family.register.antlr.FamilyRegisterParser.ItemHeadOfHouseContext;
+import yokwe.family.register.antlr.FamilyRegisterParser.ItemInheritDeathContext;
+import yokwe.family.register.antlr.FamilyRegisterParser.ItemInheritRetireContext;
+import yokwe.family.register.antlr.FamilyRegisterParser.ItemMarriageContext;
+import yokwe.family.register.antlr.FamilyRegisterParser.ItemMarriageJoinContext;
+import yokwe.family.register.antlr.FamilyRegisterParser.ItemRetireContext;
+import yokwe.family.register.antlr.FamilyRegisterParser.ItemSuccessorContext;
+import yokwe.family.register.type.Event;
+import yokwe.family.register.type.Family;
+import yokwe.family.register.type.FamilyRegister;
+import yokwe.family.register.type.Person;
+import yokwe.family.register.type.Relation;
 import yokwe.util.FileUtil;
 import yokwe.util.JapaneseDate;
 import yokwe.util.UnexpectedException;
@@ -373,6 +392,8 @@ public class ReadFile {
 				for (var event : person.eventList) {
 					if (event.type == Event.Type.INHERIT_DEATH) {
 						var oldHead = event.value;
+						if (FamilyRegister.isUnknown(oldHead)) continue;
+						
 						if (personMap.containsKey(oldHead)) {
 							// expect
 						} else {
