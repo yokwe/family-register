@@ -48,7 +48,7 @@ JAPANESE_GENDER:	[男女];
 // abstract lexer rule second
 //
 fragment
-JAPANESE_ERA:		'昭和'|'大正'|'明治'|'慶応'|'元治'|'文久'|'万延'|'安政'|'嘉永'|'弘化'|'天保'|'文政'|'文化'|'享和';
+JAPANESE_ERA:		'平成'|'昭和'|'大正'|'明治'|'慶応'|'元治'|'文久'|'万延'|'安政'|'嘉永'|'弘化'|'天保'|'文政'|'文化'|'享和';
 fragment
 JAPANESE_YEAR:		'元'|[1-9]|[1-9][0-9];
 fragment
