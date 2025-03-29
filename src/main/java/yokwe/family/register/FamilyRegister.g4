@@ -118,7 +118,7 @@ itemValue
 	| date=JAPANESE_DATE MARRIAGE					spouse=JAPANESE_STRING		#  ItemMarriage
 	| date=JAPANESE_DATE MARRIAGE_JOIN				spouse=JAPANESE_STRING		#  ItemMarriageJoin
 	| date=JAPANESE_DATE DIVORCE												#  ItemDivorce
-	| date=JAPANESE_DATE DIVORCE_REJOIN				address=JAPANESE_STRING		#  ItemDivorceRejoin
+	| date=JAPANESE_DATE DIVORCE_REJOIN											#  ItemDivorceRejoin
 	| date=JAPANESE_DATE ADOPT_JOIN					father=JAPANESE_STRING		#  ItemAdoptJoin
 	| date=JAPANESE_DATE SUCCESSOR												#  ItemSuccessor
 	| date=JAPANESE_DATE DISINHERIT												#  ItemDisinherit
