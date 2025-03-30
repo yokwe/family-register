@@ -388,12 +388,13 @@ public class ReadFile {
 				for (var event : person.eventList) {
 					if (event.type == Event.Type.INHERIT_DEATH) {
 						var oldHead = event.value;
-						if (FamilyRegister.isUnknown(oldHead)) continue;
 						
 						if (personMap.containsKey(oldHead)) {
 							// expect
+						} else if (FamilyRegister.isUnknown(oldHead)) {
+							// expect
 						} else {
-							logger.warn("PERSON  old head doesn't exist in personMap  {}  {}", fullName, oldHead);
+							logger.warn("PERSON  died head doesn't exist in personMap  {}  {}", fullName, oldHead);
 							countWarn++;
 						}
 					}
@@ -408,6 +409,8 @@ public class ReadFile {
 					if (event.type == Event.Type.INHERIT_RETIRE) {
 						var oldHead = event.value;
 						if (personMap.containsKey(oldHead)) {
+							// expect
+						} else if (FamilyRegister.isUnknown(oldHead)) {
 							// expect
 						} else {
 							logger.warn("PERSON  retired head doesn't exist in personMap  {}  {}", fullName,
