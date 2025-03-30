@@ -89,9 +89,6 @@ public class ReadFile {
 			context.familyMap.values().stream().forEach(o -> addressSet.add(o.address));
 			context.personMap.values().stream().forEach(o -> addressSet.add(o.address));
 			logger.info("address               {}", addressSet.size());
-			for(var address: addressSet) {
-				logger.info("XX  {}", address);
-			}
 		}
 		logger.info("countPerson           {}", context.countPerson);
 		logger.info("countBiologicalChild  {}", context.countBiologicalChild);
