@@ -7,22 +7,26 @@ import yokwe.util.StringUtil;
 
 public class Person implements Comparable<Person> {
 	public final String   address;
-	public final String   familyName;
+	public final String   lastName;
 	public final String   mother;
 	public final String   father;
 	public final Relation relation;
-	public final String   name;
+	public final String   firstName;
 	
 	public final List<Event> eventList;
 	
-	public Person(String address, String familyName, String mother, String father, Relation relation, String name, List<Event> itemList) {
-		this.address    = address;
-		this.familyName = familyName;
-		this.mother     = mother;
-		this.father     = father;
-		this.relation   = relation;
-		this.name       = name;
-		this.eventList  = itemList;
+	public Person(String address, String lastName, String mother, String father, Relation relation, String firstName, List<Event> itemList) {
+		this.address   = address;
+		this.lastName  = lastName;
+		this.mother    = mother;
+		this.father    = father;
+		this.relation  = relation;
+		this.firstName = firstName;
+		this.eventList = itemList;
+	}
+	
+	public String getKey() {
+		return lastName + firstName;
 	}
 	
 	public Event getBirth() {

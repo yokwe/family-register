@@ -9,9 +9,9 @@ public class Family implements Comparable<Family> {
 	public final String       familyName;
 	public final String       mother;
 	public final String       father;
-	public final List<Person> childList;
+	public final List<String> childList; // list of person full name
 	
-	public Family(String address, String familyName, String mother, String father, List<Person> childList) {
+	public Family(String address, String familyName, String mother, String father, List<String> childList) {
 		this.address    = address;
 		this.familyName = familyName;
 		this.mother     = mother;
@@ -19,6 +19,10 @@ public class Family implements Comparable<Family> {
 		this.childList  = childList;
 	}
 	
+	public String getKey() {
+		return father + "-" + mother;
+	}
+
 	@Override
 	public String toString() {
 		return StringUtil.toString(this);

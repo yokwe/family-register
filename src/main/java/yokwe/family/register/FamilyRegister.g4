@@ -19,8 +19,8 @@ ADOPTED_CHILD:		'養子';
 FATHER:				'父親';
 MOTHER:				'母親';
 RELATION:			'続柄';
-FAMILY_NAME:		'名字';
-NAME:				'名前';
+LAST_NAME:			'名字';
+FIRST_NAME:			'名前';
 
 BIRTH:				'出生';
 DEATH:				'死亡';
@@ -85,22 +85,19 @@ addressBlockItem
 	
 	
 personBlock
-	: PERSON BLOCK_BEGIN addressValue familyNameValue fatherValue relationValue nameValue itemBlock? BLOCK_END
+	: PERSON BLOCK_BEGIN addressValue lastNameValue fatherValue relationValue firstNameValue itemBlock? BLOCK_END
 	;
 
 
 familyBlock
-	: FAMILY BLOCK_BEGIN addressValue familyNameValue motherValue fatherValue childBlock+ BLOCK_END
+	: FAMILY BLOCK_BEGIN addressValue lastNameValue motherValue fatherValue childBlock+ BLOCK_END
 	;
 childBlock
 	: biologicalChildBlock # BiolgicalChild
-	| adoptedChildBlock    # AdoptedChild
+	| adoptedChildValue    # AdoptedChild
 	;
 biologicalChildBlock
-	: BIOLOGICAL_CHILD BLOCK_BEGIN addressValue? relationValue nameValue itemBlock? BLOCK_END
-	;
-adoptedChildBlock
-	: ADOPTED_CHILD BLOCK_BEGIN addressValue familyNameValue fatherValue relationValue nameValue itemBlock? BLOCK_END
+	: BIOLOGICAL_CHILD BLOCK_BEGIN addressValue? relationValue firstNameValue itemBlock? BLOCK_END
 	;
 
 
@@ -129,6 +126,9 @@ itemValue
 addressValue
 	: ADDRESS value=JAPANESE_STRING
 	;
+adoptedChildValue
+	: ADOPTED_CHILD value=JAPANESE_STRING
+	;
 fatherValue
 	: FATHER value=JAPANESE_STRING
 	;
@@ -138,9 +138,10 @@ motherValue
 relationValue
 	: RELATION value=JAPANESE_RELATION
 	;
-familyNameValue
-	: FAMILY_NAME value=JAPANESE_STRING
+lastNameValue
+	: LAST_NAME value=JAPANESE_STRING
 	;
-nameValue
-	: NAME value=JAPANESE_STRING
+firstNameValue
+	: FIRST_NAME value=JAPANESE_STRING
 	;
+	

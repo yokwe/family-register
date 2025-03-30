@@ -93,6 +93,13 @@ public class ReadFile {
 		logger.info("countPerson           {}", context.countPerson);
 		logger.info("countBiologicalChild  {}", context.countBiologicalChild);
 		logger.info("countAdoptedChild     {}", context.countAdoptedChild);
+		{
+			int countFamilyChild = 0;
+			for(var family: context.familyMap.values()) {
+				countFamilyChild += family.childList.size();
+			}
+			logger.info("countFamilyChild      {}", countFamilyChild);
+		}
 	}
 
 	public static class Context {
@@ -105,6 +112,34 @@ public class ReadFile {
 		public int countPerson          = 0;
 		public int countBiologicalChild = 0;
 		public int countAdoptedChild    = 0;
+		
+		public void addAddress(List<String> list) {
+			addressList.add(list);
+		}
+		public void addPerson(Person person) {
+			var key = person.getKey();
+			if (personMap.containsKey(key)) {
+				// duplicate key
+				logger.error("Duplicate person");
+				logger.error("  key  {}", key);
+				logger.error("  new  {}", person);
+				logger.error("  old  {}", personMap.get(key));
+			} else {
+				personMap.put(key, person);
+			}
+		}
+		public void addFamily(Family family) {
+			var key = family.getKey();
+			if (familyMap.containsKey(key)) {
+				// duplicate key
+				logger.error("Duplicate family");
+				logger.error("  key  {}", key);
+				logger.error("  new  {}", family);
+				logger.error("  old  {}", familyMap.get(key));
+			} else {
+				familyMap.put(key, family);
+			}
+		}
 	}
 
 	public static class BuildContext extends FamilyRegisterBaseVisitor<Void> {
@@ -126,7 +161,7 @@ public class ReadFile {
 				addressList.add(value);
 			}
 //			logger.info("address  {}", addressList);
-			context.addressList.add(addressList);
+			context.addAddress(addressList);
 
 			return visitChildren(ctx);
 		}
@@ -137,33 +172,19 @@ public class ReadFile {
 		@Override
 		public Void visitPersonBlock(FamilyRegisterParser.PersonBlockContext ctx) {
 			// addressValue familyNameValue fatherValue relationValue nameValue itemBlock?
-			var address = ctx.addressValue().value.getText();
-			var familyName = ctx.familyNameValue().value.getText();
-			var father = ctx.fatherValue().value.getText();
-			var relation = Relation.fromString(ctx.relationValue().value.getText());
-			var name = ctx.nameValue().value.getText();
+			var address   = ctx.addressValue().value.getText();
+			var lastName  = ctx.lastNameValue().value.getText();
+			var father    = ctx.fatherValue().value.getText();
+			var relation  = Relation.fromString(ctx.relationValue().value.getText());
+			var firstName = ctx.firstNameValue().value.getText();
 
 			// build list
 			var eventList = new ArrayList<Event>();
 			addEvent(eventList, ctx.itemBlock());
 
 			// addressValue familyNameValue fatherValue relationValue nameValue itemBlock?
-			var person = new Person(address, familyName, null, father, relation, name, eventList);
-//			logger.info("person  {}", person);
-			{
-				var key = person.familyName + person.name;
-				if (context.personMap.containsKey(key)) {
-					logger.error("Duplicate person");
-					logger.error("  key  {}", key);
-					logger.error("  new  {}", person);
-					logger.error("  old  {}", context.personMap.get(key));
-					throw new UnexpectedException("Duplicate person");
-				} else {
-					context.personMap.put(key, person);
-					logger.info("person key  {}", key);
-				}
-			}
-			
+			var person = new Person(address, lastName, null, father, relation, firstName, eventList);
+			context.addPerson(person);
 			context.countPerson++;
 			return visitChildren(ctx);
 		}
@@ -174,13 +195,13 @@ public class ReadFile {
 		@Override
 		public Void visitFamilyBlock(FamilyRegisterParser.FamilyBlockContext ctx) {
 			// addressValue? familyNameValue motherValue fatherValue childBlock+
-			var familyAddress = ctx.addressValue().value.getText();
-			var familyFamilyName = ctx.familyNameValue().value.getText();
-			var familyMother = ctx.motherValue().value.getText();
-			var familyFather = ctx.fatherValue().value.getText();
+			var familyAddress   = ctx.addressValue().value.getText();
+			var familyLastName = ctx.lastNameValue().value.getText();
+			var familyMother   = ctx.motherValue().value.getText();
+			var familyFather   = ctx.fatherValue().value.getText();
 
 			// build list
-			var childList = new ArrayList<Person>();
+			var childList = new ArrayList<String>();
 			if (ctx.childBlock() != null) {
 				// addressValue? relationValue nameValue itemBlock?
 				for (var e : ctx.childBlock()) {
@@ -188,31 +209,22 @@ public class ReadFile {
 						var item = (BiolgicalChildContext) e;
 						var block = item.biologicalChildBlock();
 
-						var address = block.addressValue() == null ? familyAddress
-								: block.addressValue().value.getText();
-						var relation = Relation.fromString(block.relationValue().value.getText());
-						var name = block.nameValue().value.getText();
+						var address   = block.addressValue() == null ? familyAddress : block.addressValue().value.getText();
+						var relation  = Relation.fromString(block.relationValue().value.getText());
+						var firstName = block.firstNameValue().value.getText();
 
 						List<Event> eventList = new ArrayList<>();
 						addEvent(eventList, block.itemBlock());
-
-						childList.add(new Person(address, familyFamilyName, familyMother, familyFather, relation, name,
-								eventList));
+						
+						var person = new Person(address, familyLastName, familyMother, familyFather, relation, firstName, eventList);
+						context.addPerson(person);
 						context.countBiologicalChild++;
+						
+						childList.add(person.getKey());
 					} else if (e instanceof AdoptedChildContext) {
 						var item = (AdoptedChildContext) e;
-						var block = item.adoptedChildBlock();
-
-						var address = block.addressValue().value.getText();
-						var familyName = block.familyNameValue().value.getText();
-						var father = block.fatherValue().value.getText();
-						var relation = Relation.fromString(block.relationValue().value.getText());
-						var name = block.nameValue().value.getText();
-
-						List<Event> eventList = new ArrayList<>();
-						addEvent(eventList, block.itemBlock());
-
-						childList.add(new Person(address, familyName, null, father, relation, name, eventList));
+						var name = item.adoptedChildValue().value.getText();
+						childList.add(name);
 						context.countAdoptedChild++;
 					} else {
 						logger.error("Unexpected class");
@@ -222,39 +234,23 @@ public class ReadFile {
 				}
 			}
 
-			var family = new Family(familyAddress, familyFamilyName, familyMother, familyFather, childList);
+			var family = new Family(familyAddress, familyLastName, familyMother, familyFather, childList);
 //			logger.info("family  {}", family);
+			context.addFamily(family);
+			
+			// sanity check
 			{
-				var key = family.father;
-				if (context.familyMap.containsKey(key)) {
-					logger.error("Duplicate family");
-					logger.error("  key  {}", key);
-					logger.error("  new  {}", family);
-					logger.error("  old  {}", context.familyMap.get(key));
-					throw new UnexpectedException("Duplicate family");
-				} else {
-					context.familyMap.put(key, family);
-				}
-			}
-			{
+				var set = new HashSet<String>();
 				for (var child : childList) {
-					{
-						var key = child.familyName + child.name;
-						if (context.personMap.containsKey(key)) {
-							logger.error("Duplicate person");
-							logger.error("  key  {}", key);
-							logger.error("  new  {}", child);
-							logger.error("  old  {}", context.personMap.get(key));
-							throw new UnexpectedException("Duplicate person");
-						} else {
-							context.personMap.put(key, child);
-							logger.info("child  key  {}", key);
-						}
+					if (set.contains(child)) {
+						logger.error("Duplicate child");
+						logger.error("  child  {}", child);
+						throw new UnexpectedException("Duplicate child");
 					}
-
+					set.add(child);
 				}
-				return visitChildren(ctx);
 			}
+			return visitChildren(ctx);
 		}
 
 		private static void addEvent(List<Event> list, ItemBlockContext ctx) {
@@ -348,7 +344,7 @@ public class ReadFile {
 			var set = new HashSet<String>();
 
 			for (var person : personMap.values()) {
-				var fullNameInPerson = person.familyName + person.name;
+				var fullNameInPerson = person.lastName + person.firstName;
 				var fatherInPerson = person.father;
 
 				if (FamilyRegister.isUnknown(fatherInPerson))
@@ -370,7 +366,7 @@ public class ReadFile {
 		// check person marriage spouse exists in personMap
 		{
 			for (var person : personMap.values()) {
-				var fullName = person.familyName + person.name;
+				var fullName = person.lastName + person.firstName;
 				for (var event : person.eventList) {
 					if (event.isMarriage()) {
 						var spouse = event.value;
@@ -388,7 +384,7 @@ public class ReadFile {
 		// check old head exists in personMap
 		{
 			for (var person : personMap.values()) {
-				var fullName = person.familyName + person.name;
+				var fullName = person.lastName + person.firstName;
 				for (var event : person.eventList) {
 					if (event.type == Event.Type.INHERIT_DEATH) {
 						var oldHead = event.value;
@@ -407,7 +403,7 @@ public class ReadFile {
 		// check retired head exists in personMap
 		{
 			for (var person : personMap.values()) {
-				var fullName = person.familyName + person.name;
+				var fullName = person.lastName + person.firstName;
 				for (var event : person.eventList) {
 					if (event.type == Event.Type.INHERIT_RETIRE) {
 						var oldHead = event.value;
@@ -425,7 +421,7 @@ public class ReadFile {
 		// check new head exists in personMap
 		{
 			for (var person : personMap.values()) {
-				var fullName = person.familyName + person.name;
+				var fullName = person.lastName + person.firstName;
 				for (var event : person.eventList) {
 					if (event.type == Event.Type.RETIRE) {
 						var newHead = event.value;
@@ -470,6 +466,19 @@ public class ReadFile {
 					logger.warn("FAMILY  mother doesn't exist in personMap  {}", motherInFamily);
 					countWarn++;
 					set.add(motherInFamily);
+				}
+			}
+		}
+		// check family.childList exists in personMap
+		{
+			for (var family : familyMap.values()) {
+				for(var child: family.childList) {
+					if (personMap.containsKey(child)) {
+						// expected
+					} else {
+						logger.warn("FAMILY  child doesn't exist in personMap  {}", child);
+						countWarn++;
+					}
 				}
 			}
 		}
