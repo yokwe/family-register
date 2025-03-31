@@ -59,6 +59,7 @@ public class Event implements Comparable<Event> {
 	public final String       name;
 	public final JapaneseDate date;
 	public final Type         type;
+	
 	public final String       value;
 	
 	private Event(String name, JapaneseDate date, Type type, String value) {
@@ -116,11 +117,7 @@ public class Event implements Comparable<Event> {
 	public boolean isMarriage() {
 		return type == Type.MARRIAGE || type == Type.MARRIAGE_JOIN;
 	}
-	
-	public String getKey() {
-		return name + date.toString() + type;
-	}
-	
+		
 	@Override
 	public String toString() {
 		if (value.isEmpty()) {
@@ -130,11 +127,15 @@ public class Event implements Comparable<Event> {
 		}
 	}
 	
+	public String getKey() {
+		return name + date.toString() + type;
+	}
 	@Override
 	public int compareTo(Event that) {
 		int ret = this.name.compareTo(that.name);
 		if (ret == 0) ret = this.date.compareTo(that.date);
 		if (ret == 0) ret = this.type.compareTo(that.type);
+		if (ret == 0) ret = this.value.compareTo(that.value);
 		return ret;
 	}
 }

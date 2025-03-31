@@ -41,9 +41,10 @@ public class Family implements Comparable<Family> {
 	
 	public final String    father;
 	public final String    mother;
+	public final String    childName;
+	
 	public final String    lastName;
 	public final ChildType childType;
-	public final String    childName;
 	
 	private Family(String father, String mother, String lastName, ChildType childType, String childName) {
 		this.father    = father;
@@ -52,21 +53,19 @@ public class Family implements Comparable<Family> {
 		this.childType = childType;
 		this.childName = childName;
 	}
-	
-	public String getKey() {
-		return father + mother + childName;
-	}
-	
+		
 	@Override
 	public String toString() {
 		return StringUtil.toString(this);
 	}
 	
+	public String getKey() {
+		return father + mother + childName;
+	}
 	@Override
 	public int compareTo(Family that) {
 		int ret = this.father.compareTo(that.father);
 		if (ret == 0) ret = this.mother.compareTo(that.mother);
-		if (ret == 0) ret = this.lastName.compareTo(that.lastName);
 		if (ret == 0) ret = this.childName.compareTo(that.childName);
 		return ret;
 	}

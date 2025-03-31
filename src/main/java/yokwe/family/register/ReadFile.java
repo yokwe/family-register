@@ -32,6 +32,7 @@ import yokwe.family.register.antlr.FamilyRegisterParser.ItemMarriageContext;
 import yokwe.family.register.antlr.FamilyRegisterParser.ItemMarriageJoinContext;
 import yokwe.family.register.antlr.FamilyRegisterParser.ItemRetireContext;
 import yokwe.family.register.antlr.FamilyRegisterParser.ItemSuccessorContext;
+import yokwe.family.register.type.Address;
 import yokwe.family.register.type.Event;
 import yokwe.family.register.type.Family;
 import yokwe.family.register.type.FamilyRegister;
@@ -84,7 +85,6 @@ public class ReadFile {
 		
 		{
 			var addressSet = new TreeSet<String>();
-			context.addressList.stream().forEach(o -> addressSet.addAll(o));
 			context.personMap.values().stream().forEach(o -> addressSet.add(o.address));
 			logger.info("address               {}", addressSet.size());
 		}
@@ -92,21 +92,24 @@ public class ReadFile {
 		logger.info("countBiologicalChild  {}", context.countBiologicalChild);
 		logger.info("countAdoptedChild     {}", context.countAdoptedChild);
 		
-		logger.info("family  {}  {}", context.familyMap.size(), StorageRegister.Family.getPath());
-		StorageRegister.Family.save(context.familyMap.values());
+		logger.info("address  {}  {}", context.addressList.size(), StorageRegister.ADDRESS.getPath());
+		StorageRegister.ADDRESS.save(context.addressList);
 		
-		logger.info("person  {}  {}", context.personMap.size(), StorageRegister.Person.getPath());
-		StorageRegister.Person.save(context.personMap.values());
+		logger.info("family   {}  {}", context.familyMap.size(), StorageRegister.FAMILY.getPath());
+		StorageRegister.FAMILY.save(context.familyMap.values());
 		
-		logger.info("event   {}  {}", context.eventList.size(), StorageRegister.Event.getPath());
-		StorageRegister.Event.save(context.eventList);
+		logger.info("person   {}  {}", context.personMap.size(), StorageRegister.PERSON.getPath());
+		StorageRegister.PERSON.save(context.personMap.values());
+		
+		logger.info("event    {}  {}", context.eventList.size(), StorageRegister.EVENT.getPath());
+		StorageRegister.EVENT.save(context.eventList);
 	}
 
 	public static class Context {
-		public final List<List<String>> addressList = new ArrayList<>();
-		public final Map<String, Person> personMap = new TreeMap<>();
-		public final Map<String, Family> familyMap = new TreeMap<>();
-		public final List<Event>         eventList = new ArrayList<>();
+		public final List<Address>       addressList = new ArrayList<>();
+		public final Map<String, Person> personMap   = new TreeMap<>();
+		public final Map<String, Family> familyMap   = new TreeMap<>();
+		public final List<Event>         eventList   = new ArrayList<>();
 		// father
 		
 		public int countPerson          = 0;
@@ -114,7 +117,7 @@ public class ReadFile {
 		public int countAdoptedChild    = 0;
 		
 		public void addAddress(List<String> list) {
-			addressList.add(list);
+			addressList.addAll(Address.getList(list));
 		}
 		public void addPerson(Person person) {
 			var key = person.getKey();
