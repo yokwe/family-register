@@ -72,8 +72,6 @@ public class ReadFile {
 
 				var parser = new FamilyRegisterParser(new CommonTokenStream(lexer));
 				visitor.visitBody(parser.body());
-				logger.info("context  address  {}  person  {}  family  {}", context.addressList.size(),
-						context.personMap.size(), context.familyMap.size());
 			}
 		}
 		// check context
@@ -82,31 +80,33 @@ public class ReadFile {
 		logger.info("addressList           {}", context.addressList.size());
 		logger.info("familyMap             {}", context.familyMap.size());
 		logger.info("personMap             {}", context.personMap.size());
+		logger.info("eventList             {}", context.eventList.size());
 		
 		{
 			var addressSet = new TreeSet<String>();
 			context.addressList.stream().forEach(o -> addressSet.addAll(o));
-			context.familyMap.values().stream().forEach(o -> addressSet.add(o.address));
 			context.personMap.values().stream().forEach(o -> addressSet.add(o.address));
 			logger.info("address               {}", addressSet.size());
 		}
 		logger.info("countPerson           {}", context.countPerson);
 		logger.info("countBiologicalChild  {}", context.countBiologicalChild);
 		logger.info("countAdoptedChild     {}", context.countAdoptedChild);
-		{
-			int countFamilyChild = 0;
-			for(var family: context.familyMap.values()) {
-				countFamilyChild += family.childList.size();
-			}
-			logger.info("countFamilyChild      {}", countFamilyChild);
-		}
+		
+		logger.info("family  {}  {}", context.familyMap.size(), StorageRegister.Family.getPath());
+		StorageRegister.Family.save(context.familyMap.values());
+		
+		logger.info("person  {}  {}", context.personMap.size(), StorageRegister.Person.getPath());
+		StorageRegister.Person.save(context.personMap.values());
+		
+		logger.info("event   {}  {}", context.eventList.size(), StorageRegister.Event.getPath());
+		StorageRegister.Event.save(context.eventList);
 	}
 
 	public static class Context {
 		public final List<List<String>> addressList = new ArrayList<>();
 		public final Map<String, Person> personMap = new TreeMap<>();
-		// familyName + name
 		public final Map<String, Family> familyMap = new TreeMap<>();
+		public final List<Event>         eventList = new ArrayList<>();
 		// father
 		
 		public int countPerson          = 0;
@@ -124,6 +124,7 @@ public class ReadFile {
 				logger.error("  key  {}", key);
 				logger.error("  new  {}", person);
 				logger.error("  old  {}", personMap.get(key));
+				throw new UnexpectedException("Duplicate person");
 			} else {
 				personMap.put(key, person);
 			}
@@ -136,8 +137,85 @@ public class ReadFile {
 				logger.error("  key  {}", key);
 				logger.error("  new  {}", family);
 				logger.error("  old  {}", familyMap.get(key));
+				throw new UnexpectedException("Duplicate family");
 			} else {
 				familyMap.put(key, family);
+			}
+		}
+		public void addEvent(Person person, ItemBlockContext ctx) {
+			if (ctx == null) return;
+			
+			var name = person.lastName + person.firstName;
+
+			for (var e : ctx.itemValue()) {
+				if (e instanceof ItemBirthContext) {
+					var item = (ItemBirthContext) e;
+					var date = JapaneseDate.getInstance(item.date.getText());
+					eventList.add(Event.birth(name, date));
+				} else if (e instanceof ItemDeathContext) {
+					var item = (ItemDeathContext) e;
+					var date = JapaneseDate.getInstance(item.date.getText());
+					eventList.add(Event.death(name, date));
+				} else if (e instanceof ItemHeadOfHouseContext) {
+					var item = (ItemHeadOfHouseContext) e;
+					var date = JapaneseDate.getInstance(item.date.getText());
+					eventList.add(Event.headOfHouse(name, date));
+				} else if (e instanceof ItemBranchContext) {
+					var item = (ItemBranchContext) e;
+					var date = JapaneseDate.getInstance(item.date.getText());
+					var addr = item.address.getText();
+					eventList.add(Event.branch(name, date, addr));
+				} else if (e instanceof ItemRetireContext) {
+					var item = (ItemRetireContext) e;
+					var date = JapaneseDate.getInstance(item.date.getText());
+					var newHead = item.newHead.getText();
+					eventList.add(Event.retire(name, date, newHead));
+				} else if (e instanceof ItemInheritDeathContext) {
+					var item = (ItemInheritDeathContext) e;
+					var date = JapaneseDate.getInstance(item.date.getText());
+					var prevHead = item.oldHead.getText();
+					eventList.add(Event.inheritDeath(name, date, prevHead));
+				} else if (e instanceof ItemInheritRetireContext) {
+					var item = (ItemInheritRetireContext) e;
+					var date = JapaneseDate.getInstance(item.date.getText());
+					var prevHead = item.oldHead.getText();
+					eventList.add(Event.inheritRetire(name, date, prevHead));
+				} else if (e instanceof ItemMarriageContext) {
+					var item = (ItemMarriageContext) e;
+					var date = JapaneseDate.getInstance(item.date.getText());
+					var spouse = item.spouse.getText();
+					eventList.add(Event.marriage(name, date, spouse));
+				} else if (e instanceof ItemMarriageJoinContext) {
+					var item = (ItemMarriageJoinContext) e;
+					var date = JapaneseDate.getInstance(item.date.getText());
+					var spouse = item.spouse.getText();
+					eventList.add(Event.marriageJoin(name, date, spouse));
+				} else if (e instanceof ItemDivorceContext) {
+					var item = (ItemDivorceContext) e;
+					var date = JapaneseDate.getInstance(item.date.getText());
+					eventList.add(Event.divorce(name, date));
+				} else if (e instanceof ItemDivorceRejoinContext) {
+					var item = (ItemDivorceRejoinContext) e;
+					var date = JapaneseDate.getInstance(item.date.getText());
+					eventList.add(Event.divorceRejoin(name, date));
+				} else if (e instanceof ItemAdoptJoinContext) {
+					var item = (ItemAdoptJoinContext) e;
+					var date = JapaneseDate.getInstance(item.date.getText());
+					var father = item.father.getText();
+					eventList.add(Event.adoptJoin(name, date, father));
+				} else if (e instanceof ItemSuccessorContext) {
+					var item = (ItemSuccessorContext) e;
+					var date = JapaneseDate.getInstance(item.date.getText());
+					eventList.add(Event.successor(name, date));
+				} else if (e instanceof ItemDisinheritContext) {
+					var item = (ItemDisinheritContext) e;
+					var date = JapaneseDate.getInstance(item.date.getText());
+					eventList.add(Event.disinherit(name, date));
+				} else {
+					logger.error("Unexpected class");
+					logger.error("  class  {}", e.getClass().getName());
+					throw new UnexpectedException("Unexpected class");
+				}
 			}
 		}
 		
@@ -173,78 +251,78 @@ public class ReadFile {
 			}
 			// check person marriage spouse exists in personMap
 			{
-				for (var person : personMap.values()) {
-					var fullName = person.lastName + person.firstName;
-					for (var event : person.eventList) {
-						if (event.isMarriage()) {
-							var spouse = event.value;
-							if (personMap.containsKey(spouse)) {
-								// expect
-							} else {
-								logger.warn("PERSON  spouse doesn't exist in personMap  {}  {}", fullName, spouse);
-								countWarn++;
-							}
-
-						}
-					}
-				}
+//				for (var person : personMap.values()) {
+//					var fullName = person.lastName + person.firstName;
+//					for (var event : person.eventList) {
+//						if (event.isMarriage()) {
+//							var spouse = event.value;
+//							if (personMap.containsKey(spouse)) {
+//								// expect
+//							} else {
+//								logger.warn("PERSON  spouse doesn't exist in personMap  {}  {}", fullName, spouse);
+//								countWarn++;
+//							}
+//
+//						}
+//					}
+//				}
 			}
 			// check old head exists in personMap
 			{
-				for (var person : personMap.values()) {
-					var fullName = person.lastName + person.firstName;
-					for (var event : person.eventList) {
-						if (event.type == Event.Type.INHERIT_DEATH) {
-							var oldHead = event.value;
-							
-							if (personMap.containsKey(oldHead)) {
-								// expect
-							} else if (FamilyRegister.isUnknown(oldHead)) {
-								// expect
-							} else {
-								logger.warn("PERSON  died head doesn't exist in personMap  {}  {}", fullName, oldHead);
-								countWarn++;
-							}
-						}
-					}
-				}
+//				for (var person : personMap.values()) {
+//					var fullName = person.lastName + person.firstName;
+//					for (var event : person.eventList) {
+//						if (event.type == Event.Type.INHERIT_DEATH) {
+//							var oldHead = event.value;
+//							
+//							if (personMap.containsKey(oldHead)) {
+//								// expect
+//							} else if (FamilyRegister.isUnknown(oldHead)) {
+//								// expect
+//							} else {
+//								logger.warn("PERSON  died head doesn't exist in personMap  {}  {}", fullName, oldHead);
+//								countWarn++;
+//							}
+//						}
+//					}
+//				}
 			}
 			// check retired head exists in personMap
 			{
-				for (var person : personMap.values()) {
-					var fullName = person.lastName + person.firstName;
-					for (var event : person.eventList) {
-						if (event.type == Event.Type.INHERIT_RETIRE) {
-							var oldHead = event.value;
-							if (personMap.containsKey(oldHead)) {
-								// expect
-							} else if (FamilyRegister.isUnknown(oldHead)) {
-								// expect
-							} else {
-								logger.warn("PERSON  retired head doesn't exist in personMap  {}  {}", fullName,
-										oldHead);
-								countWarn++;
-							}
-						}
-					}
-				}
+//				for (var person : personMap.values()) {
+//					var fullName = person.lastName + person.firstName;
+//					for (var event : person.eventList) {
+//						if (event.type == Event.Type.INHERIT_RETIRE) {
+//							var oldHead = event.value;
+//							if (personMap.containsKey(oldHead)) {
+//								// expect
+//							} else if (FamilyRegister.isUnknown(oldHead)) {
+//								// expect
+//							} else {
+//								logger.warn("PERSON  retired head doesn't exist in personMap  {}  {}", fullName,
+//										oldHead);
+//								countWarn++;
+//							}
+//						}
+//					}
+//				}
 			}
 			// check new head exists in personMap
 			{
-				for (var person : personMap.values()) {
-					var fullName = person.lastName + person.firstName;
-					for (var event : person.eventList) {
-						if (event.type == Event.Type.RETIRE) {
-							var newHead = event.value;
-							if (personMap.containsKey(newHead)) {
-								// expect
-							} else {
-								logger.warn("PERSON  new head doesn't exist in personMap  {}  {}", fullName, newHead);
-								countWarn++;
-							}
-						}
-					}
-				}
+//				for (var person : personMap.values()) {
+//					var fullName = person.lastName + person.firstName;
+//					for (var event : person.eventList) {
+//						if (event.type == Event.Type.RETIRE) {
+//							var newHead = event.value;
+//							if (personMap.containsKey(newHead)) {
+//								// expect
+//							} else {
+//								logger.warn("PERSON  new head doesn't exist in personMap  {}  {}", fullName, newHead);
+//								countWarn++;
+//							}
+//						}
+//					}
+//				}
 			}
 
 			// check family
@@ -282,16 +360,16 @@ public class ReadFile {
 			}
 			// check family.childList exists in personMap
 			{
-				for (var family : familyMap.values()) {
-					for(var child: family.childList) {
-						if (personMap.containsKey(child)) {
-							// expected
-						} else {
-							logger.warn("FAMILY  child doesn't exist in personMap  {}", child);
-							countWarn++;
-						}
-					}
-				}
+//				for (var family : familyMap.values()) {
+//					for(var child: family.childList) {
+//						if (personMap.containsKey(child)) {
+//							// expected
+//						} else {
+//							logger.warn("FAMILY  child doesn't exist in personMap  {}", child);
+//							countWarn++;
+//						}
+//					}
+//				}
 			}
 
 			logger.info("countWarn  {}", countWarn);
@@ -335,14 +413,13 @@ public class ReadFile {
 			var relation  = Relation.fromString(ctx.relationValue().value.getText());
 			var firstName = ctx.firstNameValue().value.getText();
 
-			// build list
-			var eventList = new ArrayList<Event>();
-			addEvent(eventList, ctx.itemBlock());
-
-			// addressValue familyNameValue fatherValue relationValue nameValue itemBlock?
-			var person = new Person(address, lastName, null, father, relation, firstName, eventList);
+			// build personMap
+			var person = new Person(address, lastName, "", father, relation, firstName);
 			context.addPerson(person);
 			context.countPerson++;
+			
+			// build eventList
+			context.addEvent(person, ctx.itemBlock());
 			return visitChildren(ctx);
 		}
 
@@ -351,139 +428,72 @@ public class ReadFile {
 		//
 		@Override
 		public Void visitFamilyBlock(FamilyRegisterParser.FamilyBlockContext ctx) {
-			// addressValue? familyNameValue motherValue fatherValue childBlock+
-			var familyAddress   = ctx.addressValue().value.getText();
-			var familyLastName = ctx.lastNameValue().value.getText();
-			var familyMother   = ctx.motherValue().value.getText();
-			var familyFather   = ctx.fatherValue().value.getText();
+			var familyList = new ArrayList<Family>();
+			{
+				var familyAddress   = ctx.addressValue().value.getText();
+				var familyLastName = ctx.lastNameValue().value.getText();
+				var familyMother   = ctx.motherValue().value.getText();
+				var familyFather   = ctx.fatherValue().value.getText();
 
-			// build list
-			var childList = new ArrayList<String>();
-			if (ctx.childBlock() != null) {
-				// addressValue? relationValue nameValue itemBlock?
-				for (var e : ctx.childBlock()) {
-					if (e instanceof BiolgicalChildContext) {
-						var item = (BiolgicalChildContext) e;
-						var block = item.biologicalChildBlock();
+				if (ctx.childBlock() != null) {
+					// addressValue? relationValue nameValue itemBlock?
+					for (var e : ctx.childBlock()) {
+						if (e instanceof BiolgicalChildContext) {
+							var item = (BiolgicalChildContext) e;
+							var block = item.biologicalChildBlock();
 
-						var address   = block.addressValue() == null ? familyAddress : block.addressValue().value.getText();
-						var relation  = Relation.fromString(block.relationValue().value.getText());
-						var firstName = block.firstNameValue().value.getText();
+							var address   = block.addressValue() == null ? familyAddress : block.addressValue().value.getText();
+							var relation  = Relation.fromString(block.relationValue().value.getText());
+							var firstName = block.firstNameValue().value.getText();
 
-						List<Event> eventList = new ArrayList<>();
-						addEvent(eventList, block.itemBlock());
-						
-						var person = new Person(address, familyLastName, familyMother, familyFather, relation, firstName, eventList);
-						context.addPerson(person);
-						context.countBiologicalChild++;
-						
-						childList.add(person.getKey());
-					} else if (e instanceof AdoptedChildContext) {
-						var item = (AdoptedChildContext) e;
-						var name = item.adoptedChildValue().value.getText();
-						childList.add(name);
-						context.countAdoptedChild++;
-					} else {
-						logger.error("Unexpected class");
-						logger.error("  class  {}", e.getClass().getName());
-						throw new UnexpectedException("Unexpected class");
+							// build person
+							var person = new Person(address, familyLastName, familyMother, familyFather, relation, firstName);
+							context.addPerson(person);
+							context.countBiologicalChild++;
+							
+							// build event
+							context.addEvent(person, block.itemBlock());
+							
+							// build family
+							var childName = person.lastName + person.firstName;
+							var family = Family.biological(familyFather, familyMother, familyLastName, childName);
+							context.addFamily(family);
+							familyList.add(family);
+						} else if (e instanceof AdoptedChildContext) {
+							var item = (AdoptedChildContext) e;
+							var childName = item.adoptedChildValue().value.getText();
+							
+							// build family
+							var family = Family.adopted(familyFather, familyMother, familyLastName, childName);
+							context.addFamily(family);
+							familyList.add(family);
+
+							context.countAdoptedChild++;
+						} else {
+							logger.error("Unexpected class");
+							logger.error("  class  {}", e.getClass().getName());
+							throw new UnexpectedException("Unexpected class");
+						}
 					}
 				}
 			}
-
-			var family = new Family(familyAddress, familyLastName, familyMother, familyFather, childList);
-//			logger.info("family  {}", family);
-			context.addFamily(family);
 			
 			// sanity check
 			{
 				var set = new HashSet<String>();
-				for (var child : childList) {
-					if (set.contains(child)) {
-						logger.error("Duplicate child");
-						logger.error("  child  {}", child);
-						throw new UnexpectedException("Duplicate child");
+				for (var family : familyList) {
+					var childName = family.childName;
+					
+					if (set.contains(childName)) {
+						logger.error("Duplicate childName");
+						logger.error("  childName  {}", childName);
+						throw new UnexpectedException("Duplicate childName");
 					}
-					set.add(child);
+					set.add(childName);
 				}
 			}
+			
 			return visitChildren(ctx);
-		}
-
-		private static void addEvent(List<Event> list, ItemBlockContext ctx) {
-			if (ctx == null)
-				return;
-
-			for (var e : ctx.itemValue()) {
-				if (e instanceof ItemBirthContext) {
-					var item = (ItemBirthContext) e;
-					var date = JapaneseDate.getInstance(item.date.getText());
-					list.add(Event.birth(date));
-				} else if (e instanceof ItemDeathContext) {
-					var item = (ItemDeathContext) e;
-					var date = JapaneseDate.getInstance(item.date.getText());
-					list.add(Event.death(date));
-				} else if (e instanceof ItemHeadOfHouseContext) {
-					var item = (ItemHeadOfHouseContext) e;
-					var date = JapaneseDate.getInstance(item.date.getText());
-					list.add(Event.headOfHouse(date));
-				} else if (e instanceof ItemBranchContext) {
-					var item = (ItemBranchContext) e;
-					var date = JapaneseDate.getInstance(item.date.getText());
-					var addr = item.address.getText();
-					list.add(Event.branch(date, addr));
-				} else if (e instanceof ItemRetireContext) {
-					var item = (ItemRetireContext) e;
-					var date = JapaneseDate.getInstance(item.date.getText());
-					var newHead = item.newHead.getText();
-					list.add(Event.retire(date, newHead));
-				} else if (e instanceof ItemInheritDeathContext) {
-					var item = (ItemInheritDeathContext) e;
-					var date = JapaneseDate.getInstance(item.date.getText());
-					var prevHead = item.oldHead.getText();
-					list.add(Event.inheritDeath(date, prevHead));
-				} else if (e instanceof ItemInheritRetireContext) {
-					var item = (ItemInheritRetireContext) e;
-					var date = JapaneseDate.getInstance(item.date.getText());
-					var prevHead = item.oldHead.getText();
-					list.add(Event.inheritRetire(date, prevHead));
-				} else if (e instanceof ItemMarriageContext) {
-					var item = (ItemMarriageContext) e;
-					var date = JapaneseDate.getInstance(item.date.getText());
-					var spouse = item.spouse.getText();
-					list.add(Event.marriage(date, spouse));
-				} else if (e instanceof ItemMarriageJoinContext) {
-					var item = (ItemMarriageJoinContext) e;
-					var date = JapaneseDate.getInstance(item.date.getText());
-					var spouse = item.spouse.getText();
-					list.add(Event.marriageJoin(date, spouse));
-				} else if (e instanceof ItemDivorceContext) {
-					var item = (ItemDivorceContext) e;
-					var date = JapaneseDate.getInstance(item.date.getText());
-					list.add(Event.divorce(date));
-				} else if (e instanceof ItemDivorceRejoinContext) {
-					var item = (ItemDivorceRejoinContext) e;
-					var date = JapaneseDate.getInstance(item.date.getText());
-					list.add(Event.divorceRejoin(date));
-				} else if (e instanceof ItemAdoptJoinContext) {
-					var item = (ItemAdoptJoinContext) e;
-					var date = JapaneseDate.getInstance(item.date.getText());
-					var father = item.father.getText();
-					list.add(Event.adoptJoin(date, father));
-				} else if (e instanceof ItemSuccessorContext) {
-					var item = (ItemSuccessorContext) e;
-					var date = JapaneseDate.getInstance(item.date.getText());
-					list.add(Event.successor(date));
-				} else if (e instanceof ItemDisinheritContext) {
-					var item = (ItemDisinheritContext) e;
-					var date = JapaneseDate.getInstance(item.date.getText());
-					list.add(Event.disinherit(date));
-				} else {
-					logger.error("Unexpected class");
-					logger.error("  class  {}", e.getClass().getName());
-					throw new UnexpectedException("Unexpected class");
-				}
-			}
 		}
 	}
 }
