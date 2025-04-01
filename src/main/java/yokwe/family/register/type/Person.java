@@ -19,10 +19,17 @@ public class Person implements Comparable<Person> {
 		this.mother    = mother;
 		this.address   = address;
 	}
+	public Person(Person that, String address) {
+		this(that.lastName, that.firstName, that.father, that.relation, that.mother, address);
+	}
 	
 	@Override
 	public String toString() {
 		return StringUtil.toString(this);
+	}
+	
+	public String getName() {
+		return lastName + firstName;
 	}
 		
 	public String getKey() {
