@@ -373,7 +373,7 @@ public class ReadFile {
 							}
 						}
 						if (!found) {
-							logger.warn("EVENT   spouse marriage is not found");
+							logger.warn("EVENT   spouse marriage event is not found");
 							logger.warn("        self   {}", event);
 							countWarn++;
 						}
@@ -404,7 +404,7 @@ public class ReadFile {
 							}
 						}
 						if (!found) {
-							logger.warn("EVENT   spouse marriage is not found");
+							logger.warn("EVENT   spouse marriage event is not found");
 							logger.warn("        self   {}", event);
 							countWarn++;
 						}
