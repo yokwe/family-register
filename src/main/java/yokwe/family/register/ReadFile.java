@@ -348,7 +348,21 @@ public class ReadFile {
 						if (personMap.containsKey(spouse)) {
 							// expected
 						} else {
-							logger.warn("EVENT   spouse doesn't exist in personMap  {}", spouse);
+							logger.warn("EVENT   marriage spouse doesn't exist in personMap  {}", event);
+							countWarn++;
+						}
+					}
+				}
+			}
+			// check adopt spouse exists in personMap
+			{
+				for(var event: eventMap.values()) {
+					if (event.type == Event.Type.ADOPT_JOIN) {
+						var spouse = event.value;
+						if (personMap.containsKey(spouse)) {
+							// expected
+						} else {
+							logger.warn("EVENT   adopt spouse doesn't exist in personMap  {}", event);
 							countWarn++;
 						}
 					}
