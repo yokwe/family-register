@@ -11,13 +11,13 @@ public class Person implements Comparable<Person> {
 	public final String   mother;
 	public final String   address;
 	
-	public Person(String address, String lastName, String mother, String father, Relation relation, String firstName) {
-		this.address   = address;
+	public Person(String lastName, String firstName, String father, Relation relation, String mother, String address) {
 		this.lastName  = lastName;
-		this.mother    = mother;
+		this.firstName = firstName;
 		this.father    = father;
 		this.relation  = relation;
-		this.firstName = firstName;
+		this.mother    = mother;
+		this.address   = address;
 	}
 	
 	@Override

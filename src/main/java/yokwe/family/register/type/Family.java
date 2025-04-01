@@ -32,11 +32,11 @@ public class Family implements Comparable<Family> {
 	}
 	
 	
-	public static Family biological(String father, String mother, String lastName, String childName) {
-		return new Family(father, mother, lastName, ChildType.BIOLOGICAL, childName);
+	public static Family biological(String father, String mother, String childName, String lastName) {
+		return new Family(father, mother, childName, lastName, ChildType.BIOLOGICAL);
 	}
-	public static Family adopted(String father, String mother, String lastName, String childName) {
-		return new Family(father, mother, lastName, ChildType.ADOPTED, childName);
+	public static Family adopted(String father, String mother, String childName, String lastName) {
+		return new Family(father, mother, childName, lastName, ChildType.ADOPTED);
 	}
 	
 	public final String    father;
@@ -46,12 +46,13 @@ public class Family implements Comparable<Family> {
 	public final String    lastName;
 	public final ChildType childType;
 	
-	private Family(String father, String mother, String lastName, ChildType childType, String childName) {
+	public Family(String father, String mother, String childName, String lastName, ChildType childType) {
 		this.father    = father;
 		this.mother    = mother;
+		this.childName = childName;
+		
 		this.lastName  = lastName;
 		this.childType = childType;
-		this.childName = childName;
 	}
 		
 	@Override

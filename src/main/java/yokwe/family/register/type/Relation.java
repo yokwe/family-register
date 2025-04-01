@@ -3,18 +3,18 @@ package yokwe.family.register.type;
 import yokwe.util.UnexpectedException;
 
 public enum Relation {
-	SON("男"),
-	SON_1("長男"),
-	SON_2("二男"),
-	SON_3("三男"),
-	SON_4("四男"),
-	SON_5("五男"),
-	DAUGHTER("女"),
-	DAUGHTER_1("長女"),
-	DAUGHTER_2("二女"),
-	DAUGHTER_3("三女"),
-	DAUGHTER_4("四女"),
-	DAUGHTER_5("五女");
+	SON       ("男",   true),
+	SON_1     ("長男", true),
+	SON_2     ("二男", true),
+	SON_3     ("三男", true),
+	SON_4     ("四男", true),
+	SON_5     ("五男", true),
+	DAUGHTER  ("女",   false),
+	DAUGHTER_1("長女", false),
+	DAUGHTER_2("二女", false),
+	DAUGHTER_3("三女", false),
+	DAUGHTER_4("四女", false),
+	DAUGHTER_5("五女", false);
 	
 	private static final org.slf4j.Logger logger = yokwe.util.LoggerUtil.getLogger();
 
@@ -28,8 +28,10 @@ public enum Relation {
 	}
 	
 	public final String value;
-	private Relation(String value) {
+	public final boolean male;
+	private Relation(String value, boolean male) {
 		this.value = value;
+		this.male  = male;
 	}
 	
 	@Override
