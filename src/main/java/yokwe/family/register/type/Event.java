@@ -123,12 +123,12 @@ public class Event implements Comparable<Event> {
 		if (value.isEmpty()) {
 			return String.format("{%s %s %s}", name, date, type);
 		} else {
-			return String.format("{%s %s %s}", name, date, type, value);
+			return String.format("{%s %s %s %s}", name, date, type, value);
 		}
 	}
 	
 	public String getKey() {
-		return name + date.toString() + type;
+		return name + date + type;
 	}
 	@Override
 	public int compareTo(Event that) {
