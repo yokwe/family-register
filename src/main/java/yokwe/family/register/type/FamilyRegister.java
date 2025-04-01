@@ -96,7 +96,7 @@ public class FamilyRegister {
 			for(var e: familyRegister.eventList) {
 				if (e.type == Event.Type.BRANCH) set.add(e.value);
 			}
-			logger.info("addres     {}", set.size());
+			logger.info("address    {}", set.size());
 		}
 		logger.info("STOP");
 	}
