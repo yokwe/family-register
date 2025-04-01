@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class FamilyRegister {
-	private static final String UNKNOWN = "不明";
+	public static final String UNKNOWN = "不明";
 	
 	public static boolean isUnknown(String string) {
 		return string.equals(UNKNOWN);
