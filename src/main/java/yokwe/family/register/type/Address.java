@@ -25,26 +25,26 @@ public class Address implements Comparable<Address> {
 		return ret;
 	}
 	
-	public final String address;
-	public final String alias;
+	public final String newAddress;
+	public final String oldAddress;
 	
-	private Address(String address, String alias) {
-		this.address = address;
-		this.alias   = alias;
+	private Address(String newAddress, String oldAddress) {
+		this.newAddress = newAddress;
+		this.oldAddress = oldAddress;
 	}
 	
 	@Override
 	public String toString() {
-		return String.format("{%s  %s}", address, alias);
+		return String.format("{%s  %s}", newAddress, oldAddress);
 	}
 	
 	public String getKey() {
-		return address;
+		return oldAddress;
 	}
 	@Override
 	public int compareTo(Address that) {
-		int ret = this.address.compareTo(that.address);
-		if (ret == 0) ret = this.alias.compareTo(that.alias);
+		int ret = this.newAddress.compareTo(that.newAddress);
+		if (ret == 0) ret = this.oldAddress.compareTo(that.oldAddress);
 		return ret;
 	}
 }
