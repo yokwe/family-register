@@ -280,7 +280,7 @@ public class ReadFile {
 					var name = person.lastName + person.firstName;
 					var mother = person.mother;
 
-					if (mother.isEmpty()) continue;
+					if (FamilyRegister.isUnknown(mother)) continue;
 					if (set.contains(mother)) continue;
 					set.add(mother);
 
@@ -501,7 +501,7 @@ public class ReadFile {
 			var firstName = ctx.firstNameValue().value.getText();
 
 			// build personMap
-			var person = new Person(address, lastName, "", father, relation, firstName);
+			var person = new Person(address, lastName, FamilyRegister.UNKNOWN, father, relation, firstName);
 			context.addPerson(person);
 			context.countPerson++;
 			
