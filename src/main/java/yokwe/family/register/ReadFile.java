@@ -356,16 +356,16 @@ public class ReadFile {
 								found = true;
 								if (e.value.equals(name)) {
 									// expect
+									if (e.date.equals(event.date)) {
+										// expect
+									} else {
+										logger.warn("EVENT   spouse marriage date is not same");
+										logger.warn("        self   {}", event);
+										logger.warn("        spouse {}", e);
+										countWarn++;
+									}
 								} else {
 									logger.warn("EVENT   spouse name is not same");
-									logger.warn("        self   {}", event);
-									logger.warn("        spouse {}", e);
-									countWarn++;
-								}
-								if (e.date.equals(event.date)) {
-									// expect
-								} else {
-									logger.warn("EVENT   spouse marriage date is not same");
 									logger.warn("        self   {}", event);
 									logger.warn("        spouse {}", e);
 									countWarn++;
@@ -388,15 +388,15 @@ public class ReadFile {
 								found = true;
 								if (e.value.equals(name)) {
 									// expect
+									if (e.date.equals(event.date)) {
+									} else {
+										logger.warn("EVENT   spouse marriage date is not same");
+										logger.warn("        self   {}", event);
+										logger.warn("        spouse {}", e);
+										countWarn++;
+									}
 								} else {
 									logger.warn("EVENT   spouse name is not same");
-									logger.warn("        self   {}", event);
-									logger.warn("        spouse {}", e);
-									countWarn++;
-								}
-								if (e.date.equals(event.date)) {
-								} else {
-									logger.warn("EVENT   spouse marriage date is not same");
 									logger.warn("        self   {}", event);
 									logger.warn("        spouse {}", e);
 									countWarn++;
