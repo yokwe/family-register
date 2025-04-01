@@ -78,11 +78,6 @@ public class ReadFile {
 		// check context
 		context.checkContext();
 		
-		logger.info("addressList           {}", context.addressList.size());
-		logger.info("familyMap             {}", context.familyMap.size());
-		logger.info("personMap             {}", context.personMap.size());
-		logger.info("eventList             {}", context.eventList.size());
-		
 		{
 			var addressSet = new TreeSet<String>();
 			context.personMap.values().stream().forEach(o -> addressSet.add(o.address));
@@ -92,8 +87,8 @@ public class ReadFile {
 		logger.info("countBiologicalChild  {}", context.countBiologicalChild);
 		logger.info("countAdoptedChild     {}", context.countAdoptedChild);
 		
-		logger.info("address  {}  {}", context.addressList.size(), StorageRegister.ADDRESS.getPath());
-		StorageRegister.ADDRESS.save(context.addressList);
+		logger.info("address  {}  {}", context.addressMap.size(), StorageRegister.ADDRESS.getPath());
+		StorageRegister.ADDRESS.save(context.addressMap.values());
 		
 		logger.info("family   {}  {}", context.familyMap.size(), StorageRegister.FAMILY.getPath());
 		StorageRegister.FAMILY.save(context.familyMap.values());
@@ -101,15 +96,15 @@ public class ReadFile {
 		logger.info("person   {}  {}", context.personMap.size(), StorageRegister.PERSON.getPath());
 		StorageRegister.PERSON.save(context.personMap.values());
 		
-		logger.info("event    {}  {}", context.eventList.size(), StorageRegister.EVENT.getPath());
-		StorageRegister.EVENT.save(context.eventList);
+		logger.info("event    {}  {}", context.eventMap.size(), StorageRegister.EVENT.getPath());
+		StorageRegister.EVENT.save(context.eventMap.values());
 	}
 
 	public static class Context {
-		public final List<Address>       addressList = new ArrayList<>();
-		public final Map<String, Person> personMap   = new TreeMap<>();
-		public final Map<String, Family> familyMap   = new TreeMap<>();
-		public final List<Event>         eventList   = new ArrayList<>();
+		public final Map<String, Address> addressMap = new TreeMap<>();
+		public final Map<String, Person>  personMap  = new TreeMap<>();
+		public final Map<String, Family>  familyMap  = new TreeMap<>();
+		public final Map<String, Event>   eventMap   = new TreeMap<>();
 		// father
 		
 		public int countPerson          = 0;
@@ -117,7 +112,20 @@ public class ReadFile {
 		public int countAdoptedChild    = 0;
 		
 		public void addAddress(List<String> list) {
-			addressList.addAll(Address.getList(list));
+			for(var e: Address.getList(list)) addAddress(e);
+		}
+		public void addAddress(Address address) {
+			var key = address.getKey();
+			if (addressMap.containsKey(key)) {
+				// duplicate key
+				logger.error("Duplicate address");
+				logger.error("  key  {}", key);
+				logger.error("  new  {}", address);
+				logger.error("  old  {}", addressMap.get(key));
+				throw new UnexpectedException("Duplicate address");
+			} else {
+				addressMap.put(key, address);
+			}
 		}
 		public void addPerson(Person person) {
 			var key = person.getKey();
@@ -149,7 +157,8 @@ public class ReadFile {
 			if (ctx == null) return;
 			
 			var name = person.lastName + person.firstName;
-
+			
+			var eventList = new ArrayList<Event>();
 			for (var e : ctx.itemValue()) {
 				if (e instanceof ItemBirthContext) {
 					var item = (ItemBirthContext) e;
@@ -220,6 +229,20 @@ public class ReadFile {
 					throw new UnexpectedException("Unexpected class");
 				}
 			}
+			
+			for(var event: eventList) {
+				var key = event.getKey();
+				if (eventMap.containsKey(key)) {
+					// duplicate key
+					logger.error("Duplicate event");
+					logger.error("  key  {}", key);
+					logger.error("  new  {}", event);
+					logger.error("  old  {}", eventMap.get(key));
+					throw new UnexpectedException("Duplicate event");
+				} else {
+					eventMap.put(key, event);
+				}
+			}
 		}
 		
 		public void checkContext() {
@@ -233,115 +256,58 @@ public class ReadFile {
 				var set = new HashSet<String>();
 
 				for (var person : personMap.values()) {
-					var fullNameInPerson = person.lastName + person.firstName;
-					var fatherInPerson = person.father;
+					var name = person.lastName + person.firstName;
+					var father = person.father;
 
-					if (FamilyRegister.isUnknown(fatherInPerson))
-						continue;
-					if (set.contains(fatherInPerson))
-						continue;
-					set.add(fatherInPerson);
+					if (FamilyRegister.isUnknown(father)) continue;
+					if (set.contains(father)) continue;
+					set.add(father);
 
-					if (personMap.containsKey(fatherInPerson)) {
+					if (personMap.containsKey(father)) {
 						// expected
 					} else {
 						// not expected
-						logger.warn("PERSON  father doesn't exist in personMap  {}  {}", fullNameInPerson,
-								fatherInPerson);
+						logger.warn("PERSON  father doesn't exist in personMap  {}  {}", name, father);
 						countWarn++;
 					}
 				}
 			}
-			// check person marriage spouse exists in personMap
+			// check person.mother exists in personMap
 			{
-//				for (var person : personMap.values()) {
-//					var fullName = person.lastName + person.firstName;
-//					for (var event : person.eventList) {
-//						if (event.isMarriage()) {
-//							var spouse = event.value;
-//							if (personMap.containsKey(spouse)) {
-//								// expect
-//							} else {
-//								logger.warn("PERSON  spouse doesn't exist in personMap  {}  {}", fullName, spouse);
-//								countWarn++;
-//							}
-//
-//						}
-//					}
-//				}
-			}
-			// check old head exists in personMap
-			{
-//				for (var person : personMap.values()) {
-//					var fullName = person.lastName + person.firstName;
-//					for (var event : person.eventList) {
-//						if (event.type == Event.Type.INHERIT_DEATH) {
-//							var oldHead = event.value;
-//							
-//							if (personMap.containsKey(oldHead)) {
-//								// expect
-//							} else if (FamilyRegister.isUnknown(oldHead)) {
-//								// expect
-//							} else {
-//								logger.warn("PERSON  died head doesn't exist in personMap  {}  {}", fullName, oldHead);
-//								countWarn++;
-//							}
-//						}
-//					}
-//				}
-			}
-			// check retired head exists in personMap
-			{
-//				for (var person : personMap.values()) {
-//					var fullName = person.lastName + person.firstName;
-//					for (var event : person.eventList) {
-//						if (event.type == Event.Type.INHERIT_RETIRE) {
-//							var oldHead = event.value;
-//							if (personMap.containsKey(oldHead)) {
-//								// expect
-//							} else if (FamilyRegister.isUnknown(oldHead)) {
-//								// expect
-//							} else {
-//								logger.warn("PERSON  retired head doesn't exist in personMap  {}  {}", fullName,
-//										oldHead);
-//								countWarn++;
-//							}
-//						}
-//					}
-//				}
-			}
-			// check new head exists in personMap
-			{
-//				for (var person : personMap.values()) {
-//					var fullName = person.lastName + person.firstName;
-//					for (var event : person.eventList) {
-//						if (event.type == Event.Type.RETIRE) {
-//							var newHead = event.value;
-//							if (personMap.containsKey(newHead)) {
-//								// expect
-//							} else {
-//								logger.warn("PERSON  new head doesn't exist in personMap  {}  {}", fullName, newHead);
-//								countWarn++;
-//							}
-//						}
-//					}
-//				}
-			}
+				var set = new HashSet<String>();
 
+				for (var person : personMap.values()) {
+					var name = person.lastName + person.firstName;
+					var mother = person.mother;
+
+					if (mother.isEmpty()) continue;
+					if (set.contains(mother)) continue;
+					set.add(mother);
+
+					if (personMap.containsKey(mother)) {
+						// expected
+					} else {
+						// not expected
+						logger.warn("PERSON  mother doesn't exist in personMap  {}  {}", name, mother);
+						countWarn++;
+					}
+				}
+			}
+			
+			
 			// check family
 			// check family.father exists in personMap
 			{
 				var set = new HashSet<>();
 				for (var family : familyMap.values()) {
-					var fatherInFamily = family.father;
-					if (set.contains(fatherInFamily))
-						continue;
-					if (personMap.containsKey(fatherInFamily)) {
+					var father = family.father;
+					if (set.contains(father)) continue;
+					if (personMap.containsKey(father)) {
 						// expected
 					} else {
-						logger.warn("FAMILY  father doesn't exist in personMap  {}", fatherInFamily);
+						logger.warn("FAMILY  father doesn't exist in personMap  {}", father);
 						countWarn++;
-						set.add(fatherInFamily);
+						set.add(father);
 					}
 				}
 			}
@@ -349,32 +315,150 @@ public class ReadFile {
 			{
 				var set = new HashSet<>();
 				for (var family : familyMap.values()) {
-					var motherInFamily = family.mother;
-					if (set.contains(motherInFamily))
-						continue;
-					if (personMap.containsKey(motherInFamily)) {
+					var mother = family.mother;
+					if (set.contains(mother)) continue;
+					if (personMap.containsKey(mother)) {
 						// expected
 					} else {
-						logger.warn("FAMILY  mother doesn't exist in personMap  {}", motherInFamily);
+						logger.warn("FAMILY  mother doesn't exist in personMap  {}", mother);
 						countWarn++;
-						set.add(motherInFamily);
+						set.add(mother);
 					}
 				}
 			}
-			// check family.childList exists in personMap
+			
+			
+			// check event
+			// check marriage spouse exists in personMap
 			{
-//				for (var family : familyMap.values()) {
-//					for(var child: family.childList) {
-//						if (personMap.containsKey(child)) {
-//							// expected
-//						} else {
-//							logger.warn("FAMILY  child doesn't exist in personMap  {}", child);
-//							countWarn++;
-//						}
-//					}
-//				}
+				for(var event: eventMap.values()) {
+					if (event.isMarriage()) {
+						var spouse = event.value;
+						if (personMap.containsKey(spouse)) {
+							// expected
+						} else {
+							logger.warn("EVENT   spouse doesn't exist in personMap  {}", spouse);
+							countWarn++;
+						}
+					}
+				}
 			}
-
+			// check marriage of spouse exists in eventMap
+			{
+				for(var event: eventMap.values()) {
+					if (event.type == Event.Type.MARRIAGE) {
+						var name   = event.name;
+						var spouse = event.value;
+						var list = eventMap.values().stream().filter(o -> o.name.equals(spouse)).toList();
+						boolean found = false;
+						for(var e: list) {
+							if (e.type == Event.Type.MARRIAGE_JOIN) {
+								found = true;
+								if (e.value.equals(name)) {
+									// expect
+								} else {
+									logger.warn("EVENT   spouse name is not same");
+									logger.warn("        self   {}", event);
+									logger.warn("        spouse {}", e);
+									countWarn++;
+								}
+								if (e.date.equals(event.date)) {
+									// expect
+								} else {
+									logger.warn("EVENT   spouse marriage date is not same");
+									logger.warn("        self   {}", event);
+									logger.warn("        spouse {}", e);
+									countWarn++;
+								}
+							}
+						}
+						if (!found) {
+							logger.warn("EVENT   spouse marriage is not found");
+							logger.warn("        self   {}", event);
+							countWarn++;
+						}
+					}
+					if (event.type == Event.Type.MARRIAGE_JOIN) {
+						var name   = event.name;
+						var spouse = event.value;
+						var list = eventMap.values().stream().filter(o -> o.name.equals(spouse)).toList();
+						boolean found = false;
+						for(var e: list) {
+							if (e.type == Event.Type.MARRIAGE) {
+								found = true;
+								if (e.value.equals(name)) {
+									// expect
+								} else {
+									logger.warn("EVENT   spouse name is not same");
+									logger.warn("        self   {}", event);
+									logger.warn("        spouse {}", e);
+									countWarn++;
+								}
+								if (e.date.equals(event.date)) {
+								} else {
+									logger.warn("EVENT   spouse marriage date is not same");
+									logger.warn("        self   {}", event);
+									logger.warn("        spouse {}", e);
+									countWarn++;
+								}
+							}
+						}
+						if (!found) {
+							logger.warn("EVENT   spouse marriage is not found");
+							logger.warn("        self   {}", event);
+							countWarn++;
+						}
+					}
+				}
+			}
+			// check old head exists in personMap
+			{
+				for(var event: eventMap.values()) {
+					if (event.type == Event.Type.INHERIT_DEATH) {
+						var oldHead = event.value;
+						if (FamilyRegister.isUnknown(oldHead)) continue;
+						if (personMap.containsKey(oldHead)) {
+							// expected
+						} else {
+							logger.warn("EVENT   old head doesn't exist in personMap  {}", oldHead);
+							countWarn++;
+						}
+					}
+				}
+			}
+			// check retired head exists in personMap
+			{
+				for(var event: eventMap.values()) {
+					if (event.type == Event.Type.INHERIT_RETIRE) {
+						var oldHead = event.value;
+						if (FamilyRegister.isUnknown(oldHead)) continue;
+						if (personMap.containsKey(oldHead)) {
+							// expected
+						} else {
+							logger.warn("EVENT   retired head doesn't exist in personMap  {}", oldHead);
+							countWarn++;
+						}
+					}
+				}
+			}
+			// check new head exists in personMap
+			{
+				for(var event: eventMap.values()) {
+					if (event.type == Event.Type.RETIRE) {
+						var newHead = event.value;
+						if (FamilyRegister.isUnknown(newHead)) continue;
+						if (personMap.containsKey(newHead)) {
+							// expected
+						} else {
+							logger.warn("EVENT   new head doesn't exist in personMap  {}", newHead);
+							countWarn++;
+						}
+					}
+				}
+			}
+			// check ADOPT_JOIN spouse
+			// FIXME
+			
 			logger.info("countWarn  {}", countWarn);
 			logger.info("====================================");
 		}
