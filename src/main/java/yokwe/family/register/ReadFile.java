@@ -98,6 +98,17 @@ public class ReadFile {
 		
 		logger.info("event    {}  {}", context.eventMap.size(), StorageRegister.EVENT.getPath());
 		StorageRegister.EVENT.save(context.eventMap.values());
+		
+		{
+			var addressList = StorageRegister.ADDRESS.getList();
+			logger.info("addressList  {}", addressList.size());
+			var familyList = StorageRegister.FAMILY.getList();
+			logger.info("familyList  {}", familyList.size());
+			var perosnList = StorageRegister.PERSON.getList();
+			logger.info("perosnList  {}", perosnList.size());
+			var eventList = StorageRegister.EVENT.getList();
+			logger.info("eventList  {}", eventList.size());
+		}
 	}
 
 	public static class Context {
@@ -501,7 +512,7 @@ public class ReadFile {
 			var firstName = ctx.firstNameValue().value.getText();
 
 			// build personMap
-			var person = new Person(address, lastName, FamilyRegister.UNKNOWN, father, relation, firstName);
+			var person = new Person(lastName, firstName, father, relation, FamilyRegister.UNKNOWN, address);
 			context.addPerson(person);
 			context.countPerson++;
 			
@@ -534,7 +545,7 @@ public class ReadFile {
 							var firstName = block.firstNameValue().value.getText();
 
 							// build person
-							var person = new Person(address, familyLastName, familyMother, familyFather, relation, firstName);
+							var person = new Person(familyLastName, firstName, familyFather, relation, familyMother, address);
 							context.addPerson(person);
 							context.countBiologicalChild++;
 							
@@ -543,7 +554,7 @@ public class ReadFile {
 							
 							// build family
 							var childName = person.lastName + person.firstName;
-							var family = Family.biological(familyFather, familyMother, familyLastName, childName);
+							var family = Family.biological(familyFather, familyMother, childName, familyLastName);
 							context.addFamily(family);
 							familyList.add(family);
 						} else if (e instanceof AdoptedChildContext) {
@@ -551,7 +562,7 @@ public class ReadFile {
 							var childName = item.adoptedChildValue().value.getText();
 							
 							// build family
-							var family = Family.adopted(familyFather, familyMother, familyLastName, childName);
+							var family = Family.adopted(familyFather, familyMother, childName, familyLastName);
 							context.addFamily(family);
 							familyList.add(family);
 
