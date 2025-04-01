@@ -113,7 +113,7 @@ public class Event implements Comparable<Event> {
 	public static Event disinherit(String name, JapaneseDate date) {
 		return new Event(name, date, Type.DISINHERIT);
 	}
-	
+		
 	public boolean isMarriage() {
 		return type == Type.MARRIAGE || type == Type.MARRIAGE_JOIN;
 	}
