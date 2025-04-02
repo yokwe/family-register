@@ -77,6 +77,31 @@ public class FamilyRegister {
 			Event event = (e.type == Event.Type.BRANCH) ? Event.branch(e.name, e.date, newAddress(e.value)) : e;
 			eventList.add(event);
 		}
+		
+		// build family from event -- empty child
+		{
+			int countAdd = 0;
+			for(var e: eventList) {
+				if (e.isMarriage()) {
+					final String father;
+					final String mother;
+					if (personMap.get(e.name).relation.male) {
+						father = e.name;
+						mother = e.value;
+					} else {
+						father = e.value;
+						mother = e.name;
+					}
+					var key = new Parent(father, mother);
+					if (!familyMap.containsKey(key)) {
+						var value = new ArrayList<Family>();
+						familyMap.put(key, value);
+						countAdd++;
+					}
+				}
+			}
+			logger.info("familyMap  add {} entries from eventList", countAdd);
+		}
 	}
 	
 	public static void main(String[] args) {
@@ -98,6 +123,7 @@ public class FamilyRegister {
 			}
 			logger.info("address    {}", set.size());
 		}
+		
 		logger.info("STOP");
 	}
 }
