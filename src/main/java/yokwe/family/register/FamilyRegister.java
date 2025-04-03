@@ -2,6 +2,8 @@ package yokwe.family.register;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -36,16 +38,16 @@ public class FamilyRegister {
 			return ret;
 		}
 	};
-
-	private final Map<String, String>       addressMap;
-	//        oldAddess
-	//                newAddress
-	private final Map<String, Person>       personMap;
-	//        name
-	private final Map<Parent, List<Family>> familyMap;
-	private final List<Event>               eventList;
 	
-	public String newAddress(String address) {
+	private final Map<String, String>       addressMap;
+	//                oldAddess
+	//                        newAddress
+	public final Map<String, Person>       personMap;
+	//                 name
+	public final Map<Parent, List<Family>> familyMap;
+	public final List<Event>               eventList;
+	
+	private String newAddress(String address) {
 		return addressMap.getOrDefault(address, address);
 	}
 	
@@ -58,30 +60,41 @@ public class FamilyRegister {
 		throw new UnexpectedException("Unexpected name");
 	}
 	
+	public Collection<Person> getPersonList() {
+		return personMap.values();
+	}
+	
 	public FamilyRegister() {
 		// build addressMap
 		addressMap = StorageRegister.ADDRESS.getList().stream().collect(Collectors.toMap(o -> o.oldAddress, o -> o.newAddress));
 		// build personMap
-		personMap = StorageRegister.PERSON.getList().stream().collect(Collectors.toMap(o -> o.getName(), o -> new Person(o, newAddress(o.address))));
-		// build family
-		familyMap = new TreeMap<>();
-		for(var e: StorageRegister.FAMILY.getList()) {
-			var key = new Parent(e);
-			if (familyMap.containsKey(key)) {
-				familyMap.get(key).add(e);
-			} else {
-				familyMap.put(key, new ArrayList<>(Arrays.asList(e)));
-			}
+		{
+			var map = StorageRegister.PERSON.getList().stream().collect(Collectors.toMap(o -> o.getName(), o -> new Person(o, newAddress(o.address))));
+			personMap = Collections.unmodifiableMap(map);
 		}
 		// build eventList
-		eventList = new ArrayList<>();
-		for(var e: StorageRegister.EVENT.getList()) {
-			Event event = (e.eventType == Event.EventType.BRANCH) ? Event.branch(e.name, e.date, newAddress(e.value)) : e;
-			eventList.add(event);
+		{
+			var list = new ArrayList<Event>();
+			for(var e: StorageRegister.EVENT.getList()) {
+				Event event = (e.eventType == Event.EventType.BRANCH) ? Event.branch(e.name, e.date, newAddress(e.value)) : e;
+				list.add(event);
+			}
+			eventList = Collections.unmodifiableList(list);
 		}
 		
-		// build family from event -- empty child
+		// build family
 		{
+			// build map
+			var map = new TreeMap<Parent, List<Family>>();
+			for(var e: StorageRegister.FAMILY.getList()) {
+				var key = new Parent(e);
+				if (map.containsKey(key)) {
+					map.get(key).add(e);
+				} else {
+					map.put(key, new ArrayList<>(Arrays.asList(e)));
+				}
+			}
+			// add empty child family from event
 			int countAdd = 0;
 			for(var e: eventList) {
 				if (e.isMarriage()) {
@@ -95,14 +108,15 @@ public class FamilyRegister {
 						mother = e.name;
 					}
 					var key = new Parent(father, mother);
-					if (!familyMap.containsKey(key)) {
+					if (!map.containsKey(key)) {
 						var value = new ArrayList<Family>();
-						familyMap.put(key, value);
+						map.put(key, value);
 						countAdd++;
 					}
 				}
 			}
 			logger.info("familyMap  add {} entries from eventList", countAdd);
+			familyMap = Collections.unmodifiableMap(map);
 		}
 	}
 	
