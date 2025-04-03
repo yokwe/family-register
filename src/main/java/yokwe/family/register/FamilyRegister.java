@@ -1,4 +1,4 @@
-package yokwe.family.register.type;
+package yokwe.family.register;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,7 +8,9 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import yokwe.family.register.StorageRegister;
+import yokwe.family.register.type.Event;
+import yokwe.family.register.type.Family;
+import yokwe.family.register.type.Person;
 import yokwe.util.UnexpectedException;
 
 public class FamilyRegister {
@@ -74,7 +76,7 @@ public class FamilyRegister {
 		// build eventList
 		eventList = new ArrayList<>();
 		for(var e: StorageRegister.EVENT.getList()) {
-			Event event = (e.type == Event.Type.BRANCH) ? Event.branch(e.name, e.date, newAddress(e.value)) : e;
+			Event event = (e.eventType == Event.EventType.BRANCH) ? Event.branch(e.name, e.date, newAddress(e.value)) : e;
 			eventList.add(event);
 		}
 		
@@ -119,7 +121,7 @@ public class FamilyRegister {
 				set.add(e.address);
 			}
 			for(var e: familyRegister.eventList) {
-				if (e.type == Event.Type.BRANCH) set.add(e.value);
+				if (e.eventType == Event.EventType.BRANCH) set.add(e.value);
 			}
 			logger.info("address    {}", set.size());
 		}

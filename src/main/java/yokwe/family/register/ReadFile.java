@@ -35,9 +35,8 @@ import yokwe.family.register.antlr.FamilyRegisterParser.ItemSuccessorContext;
 import yokwe.family.register.type.Address;
 import yokwe.family.register.type.Event;
 import yokwe.family.register.type.Family;
-import yokwe.family.register.type.FamilyRegister;
 import yokwe.family.register.type.Person;
-import yokwe.family.register.type.Relation;
+import yokwe.family.register.type.Person.Relation;
 import yokwe.util.FileUtil;
 import yokwe.util.JapaneseDate;
 import yokwe.util.UnexpectedException;
@@ -357,7 +356,7 @@ public class ReadFile {
 			// check adopt spouse exists in personMap
 			{
 				for(var event: eventMap.values()) {
-					if (event.type == Event.Type.ADOPT_JOIN) {
+					if (event.eventType == Event.EventType.ADOPT_JOIN) {
 						var spouse = event.value;
 						if (personMap.containsKey(spouse)) {
 							// expected
@@ -371,13 +370,13 @@ public class ReadFile {
 			// check marriage of spouse exists in eventMap
 			{
 				for(var event: eventMap.values()) {
-					if (event.type == Event.Type.MARRIAGE) {
+					if (event.eventType == Event.EventType.MARRIAGE) {
 						var name   = event.name;
 						var spouse = event.value;
 						var list = eventMap.values().stream().filter(o -> o.name.equals(spouse)).toList();
 						boolean found = false;
 						for(var e: list) {
-							if (e.type == Event.Type.MARRIAGE_JOIN) {
+							if (e.eventType == Event.EventType.MARRIAGE_JOIN) {
 								found = true;
 								if (e.value.equals(name)) {
 									// expect
@@ -403,13 +402,13 @@ public class ReadFile {
 							countWarn++;
 						}
 					}
-					if (event.type == Event.Type.MARRIAGE_JOIN) {
+					if (event.eventType == Event.EventType.MARRIAGE_JOIN) {
 						var name   = event.name;
 						var spouse = event.value;
 						var list = eventMap.values().stream().filter(o -> o.name.equals(spouse)).toList();
 						boolean found = false;
 						for(var e: list) {
-							if (e.type == Event.Type.MARRIAGE) {
+							if (e.eventType == Event.EventType.MARRIAGE) {
 								found = true;
 								if (e.value.equals(name)) {
 									// expect
@@ -439,7 +438,7 @@ public class ReadFile {
 			// check old head exists in personMap
 			{
 				for(var event: eventMap.values()) {
-					if (event.type == Event.Type.INHERIT_DEATH) {
+					if (event.eventType == Event.EventType.INHERIT_DEATH) {
 						var oldHead = event.value;
 						if (FamilyRegister.isUnknown(oldHead)) continue;
 						if (personMap.containsKey(oldHead)) {
@@ -454,7 +453,7 @@ public class ReadFile {
 			// check retired head exists in personMap
 			{
 				for(var event: eventMap.values()) {
-					if (event.type == Event.Type.INHERIT_RETIRE) {
+					if (event.eventType == Event.EventType.INHERIT_RETIRE) {
 						var oldHead = event.value;
 						if (FamilyRegister.isUnknown(oldHead)) continue;
 						if (personMap.containsKey(oldHead)) {
@@ -469,7 +468,7 @@ public class ReadFile {
 			// check new head exists in personMap
 			{
 				for(var event: eventMap.values()) {
-					if (event.type == Event.Type.RETIRE) {
+					if (event.eventType == Event.EventType.RETIRE) {
 						var newHead = event.value;
 						if (FamilyRegister.isUnknown(newHead)) continue;
 						if (personMap.containsKey(newHead)) {
