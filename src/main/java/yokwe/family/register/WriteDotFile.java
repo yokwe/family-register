@@ -20,17 +20,27 @@ public class WriteDotFile {
 		logger.info("STOP");
 	}
 	
-	private static void personNode(FamilyRegister familyRegister, Dot.GraphBase g, String id, Person person) {
+	private static final FamilyRegister familyRegister;
+	static {
+		familyRegister = new FamilyRegister();
+	}
+	private static JapaneseDate getBirthday(String name) {
+		return familyRegister.getBirthday(name);
+	}
+	private static Person getPerson(String name) {
+		return familyRegister.getPerson(name);
+	}
+	
+	private static void personNode(Dot.GraphBase g, String id, Person person) {
 		var name = person.getName();
-		var birthDay = familyRegister.getBirthday(name);
+		var birthDay = getBirthday(name);
 		var color = person.relation.male ? "lightblue" : "pink";
 		var year = birthDay.eraString + birthDay.yearString;
-		var label = name + "\\n" + person.father + person.relation + "\\n" + year + "年";
+		var relation = FamilyRegister.isUnknown(person.father) ? FamilyRegister.UNKNOWN : (person.father + person.relation);
+		var label = name + "\\n" + relation + "\\n" + year + "年";
 		g.node(id).attr("fillcolor", color).attr("label", label);
 	}
 	private static void process() {
-		var familyRegister = new FamilyRegister();
-		
 		var g = new Dot.Graph("G");
 		{
 			g.attr("ranksep", "1").attr("nodesep", "2");
@@ -60,23 +70,24 @@ public class WriteDotFile {
 				
 				f1.attr("rank", "same");
 				
-				personNode(familyRegister, f1, left, familyRegister.getPerson(father));
+				personNode(f1, left, getPerson(father));
 				f1.node(middle).attr("shape", "point").attr("label", "").attr("width", "1").attr("height", "0.1");
-				personNode(familyRegister, f1, right, familyRegister.getPerson(mother));
+				personNode(f1, right, getPerson(mother));
 				
 				f.edge(left, middle, right);
 				
 				if (!childList.isEmpty()) {
 					Map<JapaneseDate, Person> childMap = new TreeMap<>();
 					for(var child: childList) {
-						var birthDay = familyRegister.getBirthday(child.childName);
-						var person   = familyRegister.getPerson(child.childName);
-						childMap.put(birthDay, person);
+						var birthday = getBirthday(child.childName);
+						var person   = getPerson(child.childName);
+						childMap.put(birthday, person);
 					}
 					f2.attr("rank", "same");
 					for(var e: childMap.values()) {
 						var child = "P_" + e.getName();
-						personNode(familyRegister, f2, child, e);
+						
+						personNode(f2, child, e);
 						
 						f.edge(middle, child);
 					}
@@ -85,7 +96,7 @@ public class WriteDotFile {
 			
 //			parentSet.retainAll(childSet);
 			for(var parent: parentSet) {
-				var person = familyRegister.getPerson(parent);
+				var person = getPerson(parent);
 				if (FamilyRegister.isUnknown(person.mother)) continue;
 				g.edge("P_" + parent, "F_" + parent);
 			}
