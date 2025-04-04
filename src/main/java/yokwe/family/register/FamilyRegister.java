@@ -11,8 +11,10 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import yokwe.family.register.type.Event;
+import yokwe.family.register.type.Event.EventType;
 import yokwe.family.register.type.Family;
 import yokwe.family.register.type.Person;
+import yokwe.util.JapaneseDate;
 import yokwe.util.UnexpectedException;
 
 public class FamilyRegister {
@@ -62,6 +64,13 @@ public class FamilyRegister {
 	
 	public Collection<Person> getPersonList() {
 		return personMap.values();
+	}
+	
+	public JapaneseDate getBirthday(String name) {
+		for(var e: eventList) {
+			if (e.eventType == EventType.BIRTH && e.name.equals(name)) return e.date;
+		}
+		return JapaneseDate.UNDEFINED;
 	}
 	
 	public FamilyRegister() {
