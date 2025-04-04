@@ -26,3 +26,6 @@ run-T001:
 
 run-antlr:
 	ant run-antlr
+
+tmp/dot/a.png: tmp/dot/a.dot
+	dot -Tpng tmp/dot/a.dot >tmp/dot/a.png
