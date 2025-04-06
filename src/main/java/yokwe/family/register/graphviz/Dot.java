@@ -212,7 +212,7 @@ public class Dot {
 
 		@Override
 		public void output(AutoIndentPrintWriter out) {
-			out.println(name + " = " + value);
+			out.println(name + " = \"" + value + "\"");
 		}
 	}
 	
