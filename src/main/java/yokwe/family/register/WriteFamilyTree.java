@@ -12,7 +12,7 @@ import yokwe.family.register.type.Person;
 import yokwe.util.FileUtil;
 import yokwe.util.JapaneseDate;
 
-public class WriteDotFile {
+public class WriteFamilyTree {
 	private static final org.slf4j.Logger logger = yokwe.util.LoggerUtil.getLogger();
 
 	public static void main(String[] args) {
