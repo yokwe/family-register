@@ -121,16 +121,25 @@ public class WriteFamilyTree {
 			
 			logger.info("personMap  {}", personMap.size());
 			logger.info("parentSet  {}", parentSet.size());
-			logger.info("personSet  {}", childSet.size());
+			logger.info("childSet   {}", childSet.size());
+			{
+				var set = new TreeSet<String>();
+				set.addAll(parentSet);
+				set.addAll(childSet);
+				logger.info("allSet     {}", set.size()); // parent and child
+			}
 			
 //			for(var e: personMap.values()) {
 //				var name = e.getName();
-//				if (personSet.contains(name)) continue;
+//				if (childSet.contains(name)) continue;
 //				logger.info("XX  {}  {}", e.getName(), e.father + e.relation);
 //			}
 		}
 		
-		logger.info("g  {}", g.toString().length());
-		FileUtil.write().file("tmp/dot/a.dot", g.toString());
+		{
+			var path = "tmp/dot/a.dot";
+			logger.info("dot file   {}  {}", g.toString().length(), path);
+			FileUtil.write().file(path, g.toString());
+		}
 	}
 }
