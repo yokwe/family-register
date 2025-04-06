@@ -73,6 +73,13 @@ public class FamilyRegister {
 		return JapaneseDate.UNDEFINED;
 	}
 	
+	public JapaneseDate getMarriage(String name) {
+		for(var e: eventList) {
+			if (e.isMarriage() && e.name.equals(name)) return e.date;
+		}
+		return JapaneseDate.UNDEFINED;
+	}
+	
 	public FamilyRegister() {
 		// build addressMap
 		addressMap = StorageRegister.ADDRESS.getList().stream().collect(Collectors.toMap(o -> o.oldAddress, o -> o.newAddress));
