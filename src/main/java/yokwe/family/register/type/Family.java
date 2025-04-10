@@ -1,6 +1,6 @@
 package yokwe.family.register.type;
 
-import yokwe.util.StringUtil;
+import yokwe.util.ToString;
 import yokwe.util.UnexpectedException;
 
 public class Family implements Comparable<Family> {
@@ -57,7 +57,7 @@ public class Family implements Comparable<Family> {
 		
 	@Override
 	public String toString() {
-		return StringUtil.toString(this);
+		return ToString.withFieldName(this);
 	}
 	
 	public String getKey() {
